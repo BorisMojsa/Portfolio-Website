@@ -1,6 +1,6 @@
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowRight, Medal, Trophy, Mail, ExternalLink, Cpu, BookOpen, Award } from "lucide-react"
+import { ArrowRight, Medal, Trophy, Mail, ExternalLink, Cpu, BookOpen, Award, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -17,23 +17,23 @@ export default function Home() {
           <Link href="/" className="text-2xl font-bold tracking-tighter pixel-text">
             BORIS_MOJSA
           </Link>
-          <div className="hidden md:flex items-center space-x-6">
-            <Link href="#about" className="hover:text-yellow-400 transition-colors pixel-shift">
+          <div className="hidden md:flex items-center space-x-8 [&_a]:relative [&_a]:px-1 [&_a]:py-0.5 [&_a]:font-bold [&_a]:transition-all [&_a]:duration-300 [&_a]:hover:scale-110">
+            <Link href="#about" className="text-red-500 hover:text-white [text-shadow:0_0_4px_#000,0_0_6px_#000,0_0_10px_#000] hover:[text-shadow:0_0_8px_#fff,0_0_12px_#ff3e3e]">
               About
             </Link>
-            <Link href="#education" className="hover:text-yellow-400 transition-colors pixel-shift">
-              Education
-            </Link>
-            <Link href="#experience" className="hover:text-yellow-400 transition-colors pixel-shift">
-              Experience
-            </Link>
-            <Link href="#projects" className="hover:text-yellow-400 transition-colors pixel-shift">
-              Projects
-            </Link>
-            <Link href="#achievements" className="hover:text-yellow-400 transition-colors pixel-shift">
+            <Link href="#achievements" className="text-blue-500 hover:text-white [text-shadow:0_0_4px_#000,0_0_6px_#000,0_0_10px_#000] hover:[text-shadow:0_0_8px_#fff,0_0_12px_#3e9fff]">
               Track & Field
             </Link>
-            <Link href="#contact" className="hover:text-yellow-400 transition-colors pixel-shift">
+            <Link href="#education" className="text-yellow-400 hover:text-yellow-300 [text-shadow:0_0_4px_#000,0_0_6px_#000,0_0_10px_#000] hover:[text-shadow:0_0_8px_#fff,0_0_12px_#ffeb3b]">
+              Education
+            </Link>
+            <Link href="#experience" className="text-red-500 hover:text-white [text-shadow:0_0_4px_#000,0_0_6px_#000,0_0_10px_#000] hover:[text-shadow:0_0_8px_#fff,0_0_12px_#ff3e3e]">
+              Experience
+            </Link>
+            <Link href="#projects" className="text-blue-500 hover:text-white [text-shadow:0_0_4px_#000,0_0_6px_#000,0_0_10px_#000] hover:[text-shadow:0_0_8px_#fff,0_0_12px_#3e9fff]">
+              Projects
+            </Link>
+            <Link href="#contact" className="text-yellow-400 hover:text-yellow-300 [text-shadow:0_0_4px_#000,0_0_6px_#000,0_0_10px_#000] hover:[text-shadow:0_0_8px_#fff,0_0_12px_#ffeb3b]">
               Contact
             </Link>
           </div>
@@ -59,16 +59,62 @@ export default function Home() {
 
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-20 flex flex-col items-center text-center bg-transparent">
-        <div className="relative mb-8 hover-scale">
-          <div className="absolute inset-0 border-4 border-yellow-400 rounded-full transform translate-x-2 translate-y-2"></div>
-          <div className="relative z-10 w-40 h-40 rounded-full overflow-hidden border-4 border-white">
-            <Image
-              src="/placeholder.svg?height=160&width=160"
-              alt="Boris Mojsa"
-              width={160}
-              height={160}
-              className="object-cover"
-            />
+        <div className="relative mb-8 hover-scale flex flex-col items-center">
+          <div className="relative group">
+            <div className="absolute inset-0 border-4 border-yellow-400 rounded-full transform translate-x-2 translate-y-2 group-hover:translate-y-3 transition-transform duration-200"></div>
+            <div className="relative z-10 w-40 h-40 rounded-full overflow-hidden border-4 border-white bg-gray-800 group-hover:border-yellow-300 transition-colors duration-200">
+              <Image
+                src="/deloitte-profile-round.jpg"
+                alt="Boris Mojsa"
+                width={160}
+                height={160}
+                className="object-cover w-full h-full"
+                priority
+              />
+            </div>
+            
+            {/* Retro Game Level Badge */}
+            <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 z-20 group-hover:scale-110 transition-transform duration-200">
+              <div className="relative">
+                <div className="absolute inset-0 bg-yellow-400 transform rotate-3 rounded-sm"></div>
+                <div className="relative bg-yellow-500 border-2 border-black px-4 py-1 -translate-x-1 -translate-y-1 rounded-sm shadow-[4px_4px_0_0_rgba(0,0,0,0.8)]">
+                  <span className="text-black font-mono font-bold text-sm tracking-tight">LVL 21</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* XP Bar */}
+          <div className="mt-8 w-full max-w-md relative">
+            <div className="flex items-center justify-between w-full mb-1">
+              <div className="relative w-8 h-8 flex items-center justify-center">
+                <span className="text-yellow-400 font-mono font-bold text-xl tracking-tight relative">
+                  <span className="absolute inset-0 text-yellow-900/50 -translate-x-0.5 -translate-y-0.5">21</span>
+                  <span className="relative">21</span>
+                </span>
+              </div>
+              <div className="flex-1 mx-2 h-8 bg-gray-800 border-2 border-gray-900 rounded-sm overflow-hidden relative">
+                <div 
+                  className="h-full bg-gradient-to-r from-yellow-400 to-yellow-600 transition-all duration-1000 ease-out"
+                  style={{
+                    width: '71%',
+                    boxShadow: 'inset 0 0 4px rgba(0,0,0,0.8)'
+                  }}
+                >
+                  <div className="absolute inset-0 bg-[length:10px_10px] bg-[linear-gradient(45deg,rgba(255,255,255,0.1)_25%,transparent_25%,transparent_50%,rgba(255,255,255,0.1)_50%,rgba(255,255,255,0.1)_75%,transparent_75%,transparent)] animate-[xpBar_1s_linear_infinite]"></div>
+                </div>
+                <div className="absolute inset-0 border-2 border-yellow-300 opacity-30 pointer-events-none"></div>
+              </div>
+              <div className="relative w-8 h-8 flex items-center justify-center">
+                <span className="text-yellow-400 font-mono font-bold text-xl tracking-tight relative">
+                  <span className="absolute inset-0 text-yellow-900/50 -translate-x-0.5 -translate-y-0.5">22</span>
+                  <span className="relative">22</span>
+                </span>
+              </div>
+            </div>
+            <div className="text-center">
+              <span className="text-yellow-400 font-mono text-sm">XP: 259 / 365</span>
+            </div>
           </div>
         </div>
         <h1 className="text-5xl md:text-7xl font-bold mb-4 pixel-text">
@@ -85,17 +131,31 @@ export default function Home() {
           <Badge className="bg-green-500 text-black px-3 py-1 text-sm hover-scale">Java</Badge>
           <Badge className="bg-blue-500 px-3 py-1 text-sm hover-scale">REST APIs</Badge>
           <Badge className="bg-purple-500 px-3 py-1 text-sm hover-scale">Flask</Badge>
+          <Badge className="bg-yellow-400 text-black px-3 py-1 text-sm hover-scale">Cloud Computing</Badge>
+          <Badge className="bg-red-500 px-3 py-1 text-sm hover-scale">Machine Learning</Badge>
+          <Badge className="bg-green-500 text-black px-3 py-1 text-sm hover-scale">Web Development</Badge>
         </div>
-        <div className="flex flex-wrap gap-4 justify-center">
-          <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-6 py-3 rounded-none border-b-4 border-yellow-600 hover:translate-y-1 transition-transform hover-scale">
-            VIEW PROJECTS <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            className="border-green-500 text-green-500 hover:bg-green-500 hover:text-black font-bold px-6 py-3 rounded-none border-b-4 hover:translate-y-1 transition-transform hover-scale"
+        <div className="flex flex-wrap gap-6 justify-center">
+          <Link href="#projects" className="group relative inline-block">
+            <div className="absolute inset-0 bg-yellow-600 translate-y-2 group-hover:translate-y-1 transition-transform duration-100 rounded-sm"></div>
+            <Button className="relative bg-yellow-400 hover:bg-yellow-300 text-black font-bold px-6 py-3 rounded-none border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:shadow-[2px_2px_0_0_rgba(0,0,0,1)] group-hover:-translate-y-1 transition-all duration-100 hover-scale">
+              VIEW PROJECTS <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          </Link>
+          <a 
+            href="/resume/Boris-Mojsa-Resume.pdf" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="group relative inline-block no-underline"
           >
-            CONTACT ME <Mail className="ml-2 h-4 w-4" />
-          </Button>
+            <div className="absolute inset-0 bg-green-700 translate-y-2 group-hover:translate-y-1 transition-transform duration-100 rounded-sm"></div>
+            <Button
+              variant="outline"
+              className="relative bg-green-500 hover:bg-green-400 text-white font-bold px-6 py-3 rounded-none border-2 border-black shadow-[4px_4px_0_0_rgba(0,0,0,1)] hover:shadow-[2px_2px_0_0_rgba(0,0,0,1)] group-hover:-translate-y-1 transition-all duration-100 hover-scale cursor-pointer"
+            >
+              RESUME <Download className="ml-2 h-4 w-4 group-hover:translate-y-0.5 transition-transform" />
+            </Button>
+          </a>
         </div>
 
         {/* Pixel art decorations */}
@@ -110,65 +170,188 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="container mx-auto px-4 py-20 bg-transparent">
-        <div className="flex flex-col md:flex-row gap-12 items-center">
-          <div className="md:w-1/2">
-            <h2 className="text-4xl font-bold mb-6 pixel-text text-green-400">ABOUT ME</h2>
-            <div className="space-y-4 text-lg">
-              <p>
-                Hello! I'm Boris Mojsa, a Computer Science student at Chicago State University with a minor in
-                Mathematics. I'm passionate about technology and track & field, bringing the same discipline and
-                determination to both arenas.
-              </p>
-              <p>
-                With a perfect 4.0 GPA, I balance rigorous academics with competitive athletics. My technical journey
-                focuses on software development, data analysis, and algorithm optimization, while my athletic pursuits
-                have earned me the TOEFL iBT Athletics Excellence Grant.
-              </p>
-              <p>
-                I'm dedicated to using my technical skills to create innovative solutions that make a positive impact,
-                whether through community-focused digital literacy initiatives or cutting-edge research projects.
-              </p>
-            </div>
-            <div className="mt-8 flex flex-wrap gap-2">
-              <Badge className="bg-red-500 hover:bg-red-600">Problem Solver</Badge>
-              <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black">Team Leader</Badge>
-              <Badge className="bg-green-500 hover:bg-green-600">Athlete</Badge>
-              <Badge className="bg-blue-500 hover:bg-blue-600">Developer</Badge>
-              <Badge className="bg-purple-500 hover:bg-purple-600">Researcher</Badge>
+      <section id="about" className="container mx-auto px-4 py-20 bg-transparent relative overflow-hidden">
+        
+        <div className="relative flex flex-col md:flex-row gap-12 items-center">
+          {/* Left side - Text content */}
+          <div className="md:w-1/2 relative z-10">
+            <div className="p-6 bg-gray-900/80 backdrop-blur-sm border-2 border-green-400 shadow-lg shadow-green-900/30">
+              <h2 className="text-4xl font-bold mb-6 pixel-text text-green-400 border-b-2 border-green-500 pb-2 inline-block">ABOUT ME</h2>
+              
+              <div className="space-y-4 text-lg font-mono">
+                <p className="relative pl-6 before:content-['>_'] before:absolute before:left-0 before:text-yellow-400">
+                  Hello! I'm <span className="text-yellow-400 font-bold">Boris Mojsa</span>, a Computer Science student at Chicago State University (Expected Graduation: May 2027) with a minor in
+                  Mathematics. I bring the same discipline from the track to tech.
+                </p>
+                <p className="relative pl-6 before:content-['>_'] before:absolute before:left-0 before:text-yellow-400">
+                  With a perfect <span className="text-green-400 font-bold">4.0 GPA</span> and recognition on both the <span className="text-yellow-400">Dean's List</span> and <span className="text-yellow-400">President's List</span>, I balance academics with competitive athletics, applying the same
+                  determination to software development and algorithm optimization.
+                </p>
+                <p className="relative pl-6 before:content-['>_'] before:absolute before:left-0 before:text-yellow-400">
+                  As a <span className="text-yellow-400">ComEd Scholar</span> and <span className="text-yellow-400">TOEFL iBT AEG</span> recipient, I'm passionate about creating innovative solutions that make an impact, from community initiatives to cutting-edge research in AI and machine learning.
+                </p>
+              </div>
+              
+              <div className="mt-8 flex flex-wrap gap-2">
+                <Badge className="bg-red-500/90 hover:bg-red-600 border border-red-400 hover:scale-105 transition-transform">
+                  <span className="text-shadow-[0_0_4px_#000]">Problem Solver</span>
+                </Badge>
+                <Badge className="bg-yellow-400/90 hover:bg-yellow-500 text-black border border-yellow-300 hover:scale-105 transition-transform">
+                  <span className="text-shadow-[0_0_2px_#fff]">Team Leader</span>
+                </Badge>
+                <Badge className="bg-green-500/90 hover:bg-green-600 border border-green-400 hover:scale-105 transition-transform">
+                  <span className="text-shadow-[0_0_4px_#000]">Athlete</span>
+                </Badge>
+                <Badge className="bg-blue-500/90 hover:bg-blue-600 border border-blue-400 hover:scale-105 transition-transform">
+                  <span className="text-shadow-[0_0_4px_#000]">Developer</span>
+                </Badge>
+                <Badge className="bg-purple-500/90 hover:bg-purple-600 border border-purple-400 hover:scale-105 transition-transform">
+                  <span className="text-shadow-[0_0_4px_#000]">Researcher</span>
+                </Badge>
+              </div>
             </div>
           </div>
+          
+          {/* Right side - Stats */}
           <div className="md:w-1/2 relative">
-            <div className="absolute inset-0 border-4 border-dashed border-green-400 transform rotate-3"></div>
-            <div className="relative bg-gray-800 p-8 transform -rotate-3">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center hover-scale">
-                  <BookOpen className="text-yellow-400 mb-2 h-8 w-8" />
-                  <span className="text-sm">GPA</span>
-                  <span className="text-xl font-bold">4.0/4.0</span>
+            <div className="relative bg-gray-900/80 backdrop-blur-sm border-2 border-green-400 p-1">
+              <div className="border-2 border-yellow-400 p-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-800/80 p-4 border-2 border-gray-700 hover:border-yellow-400 transition-colors hover:bg-gray-700/80 hover-scale">
+                    <div className="flex flex-col items-center text-center">
+                      <BookOpen className="text-yellow-400 mb-2 h-8 w-8" />
+                      <span className="text-sm text-gray-300 mb-1">GPA</span>
+                      <span className="text-2xl font-bold text-green-400">4.0/4.0</span>
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/80 p-4 border-2 border-gray-700 hover:border-yellow-400 transition-colors hover:bg-gray-700/80 hover-scale">
+                    <div className="flex flex-col items-center text-center">
+                      <Trophy className="text-yellow-400 mb-2 h-8 w-8" />
+                      <span className="text-sm text-gray-300 mb-1">Honors</span>
+                      <span className="text-xl font-bold text-yellow-400">President's List</span>
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/80 p-4 border-2 border-gray-700 hover:border-yellow-400 transition-colors hover:bg-gray-700/80 hover-scale">
+                    <div className="flex flex-col items-center text-center">
+                      <Cpu className="text-yellow-400 mb-2 h-8 w-8" />
+                      <span className="text-sm text-gray-300 mb-1">Tech Skills</span>
+                      <span className="text-xl font-bold text-blue-400">10+ Languages</span>
+                    </div>
+                  </div>
+                  <div className="bg-gray-800/80 p-4 border-2 border-gray-700 hover:border-yellow-400 transition-colors hover:bg-gray-700/80 hover-scale">
+                    <div className="flex flex-col items-center text-center">
+                      <Award className="text-yellow-400 mb-2 h-8 w-8" />
+                      <span className="text-sm text-gray-300 mb-1">Scholarships</span>
+                      <span className="text-xl font-bold text-purple-400">ComEd Scholar</span>
+                    </div>
+                  </div>
                 </div>
-                <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center hover-scale">
-                  <Trophy className="text-yellow-400 mb-2 h-8 w-8" />
-                  <span className="text-sm">Honors</span>
-                  <span className="text-xl font-bold">Dean's List</span>
+              </div>
+            </div>
+            
+            {/* Pixel art decoration */}
+            <div className="absolute -bottom-4 -right-4 w-16 h-16 bg-yellow-400 opacity-20"></div>
+            <div className="absolute -top-4 -left-4 w-8 h-8 bg-red-500 opacity-20"></div>
+          </div>
+        </div>
+      </section>
+
+      {/* Track & Field Section */}
+      <section id="achievements" className="py-20 bg-transparent">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold mb-12 pixel-text text-red-500 text-center">TRACK & FIELD</h2>
+          
+          <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 mb-12">
+            {/* Personal Bests */}
+            <div className="bg-gray-800 p-8 rounded-xl border-2 border-red-500 relative hover-animate hover-glow-red">
+              <h3 className="text-2xl font-bold mb-6 text-yellow-400 flex items-center">
+                <Trophy className="mr-2" /> Personal Bests
+              </h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                  <span className="font-medium">800m</span>
+                  <span className="font-mono text-yellow-400">1:56.09</span>
                 </div>
-                <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center hover-scale">
-                  <Cpu className="text-yellow-400 mb-2 h-8 w-8" />
-                  <span className="text-sm">Tech Skills</span>
-                  <span className="text-xl font-bold">10+ Languages</span>
+                <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                  <span className="font-medium">1500m</span>
+                  <span className="font-mono text-yellow-400">4:18.87</span>
                 </div>
-                <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center hover-scale">
-                  <Award className="text-yellow-400 mb-2 h-8 w-8" />
-                  <span className="text-sm">Scholarships</span>
-                  <span className="text-xl font-bold">ComEd Scholar</span>
+                <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                  <span className="font-medium">400m</span>
+                  <span className="font-mono text-yellow-400">50.51</span>
                 </div>
+                <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                  <span className="font-medium">Cross Country (8k)</span>
+                  <span className="font-mono text-yellow-400">29:08.5</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Career Highlights */}
+            <div className="bg-gray-800 p-8 rounded-xl border-2 border-yellow-400 relative hover-animate hover-glow-yellow">
+              <h3 className="text-2xl font-bold mb-6 text-yellow-400 flex items-center">
+                <Medal className="mr-2" /> Career Highlights
+              </h3>
+              <ul className="space-y-3 list-disc list-inside text-gray-300">
+                <li>5x Serbian National Champion (800m)</li>
+                <li>4th Place - 2019 Balkan U18 Championships (800m)</li>
+                <li>NCAA Division I Collegiate Athlete (Chicago State University)</li>
+                <li>TOEFL iBT Athletics Excellence Grant Recipient</li>
+                <li>Represented Serbia in international competitions</li>
+              </ul>
+            </div>
+          </div>
+
+          {/* National Championships */}
+          <div className="max-w-4xl mx-auto mb-12">
+            <h3 className="text-3xl font-bold mb-6 text-center text-green-400">National Championship Titles</h3>
+            <div className="space-y-4">
+              <div className="bg-gray-800 p-6 rounded-xl border-l-4 border-yellow-400 hover:border-red-500 transition-colors">
+                <h4 className="text-xl font-bold text-yellow-400">2018 Serbian U16 Championship</h4>
+                <p className="text-gray-300">🏆 Gold Medal - 800m (2:04.16)</p>
+                <p className="text-sm text-gray-400">Military Academy Stadium, Belgrade</p>
+              </div>
+              <div className="bg-gray-800 p-6 rounded-xl border-l-4 border-yellow-400 hover:border-red-500 transition-colors">
+                <h4 className="text-xl font-bold text-yellow-400">2019 Serbian U18 Indoor Championship</h4>
+                <p className="text-gray-300">🏆 Gold Medal - 800m (2:00.00)</p>
+                <p className="text-sm text-gray-400">Belgrade, Serbia</p>
+              </div>
+              <div className="bg-gray-800 p-6 rounded-xl border-l-4 border-yellow-400 hover:border-red-500 transition-colors">
+                <h4 className="text-xl font-bold text-yellow-400">2019 Serbian U18 Outdoor Championship</h4>
+                <p className="text-gray-300">🏆 Gold Medal - 800m (1:58.61)</p>
+                <p className="text-sm text-gray-400">Sremska Mitrovica, Serbia</p>
+              </div>
+              <div className="bg-gray-800 p-6 rounded-xl border-l-4 border-yellow-400 hover:border-red-500 transition-colors">
+                <h4 className="text-xl font-bold text-yellow-400">2020 Serbian U18 Indoor Championship</h4>
+                <p className="text-gray-300">🏆 Gold Medal - 800m (1:59.82)</p>
+                <p className="text-sm text-gray-400">Belgrade, Serbia</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Training Background */}
+          <div className="max-w-4xl mx-auto bg-gray-800 p-8 rounded-xl border-2 border-green-500">
+            <h3 className="text-2xl font-bold mb-4 text-green-400">Training & Development</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="text-xl font-bold text-yellow-400 mb-2">Clubs</h4>
+                <ul className="space-y-2 text-gray-300">
+                  <li>• AK Spartak Opovo (2015-Present)</li>
+                  <li>• AK Crvena Zvezda (2021-2022)</li>
+                  <li>• Chicago State University Track & Field</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="text-xl font-bold text-yellow-400 mb-2">Coaching</h4>
+                <p className="text-gray-300">Primary Coach: Nemanja Stojanović (AK Spartak Opovo)</p>
+                <p className="text-gray-300 mt-2">"Under Coach Stojanović's guidance, I achieved the best results of my career and developed both as an athlete and individual."</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Rest of the sections with background-color adjustments */}
+      {/* Education Section */}
       <section id="education" className="py-20 bg-transparent">
         {/* Education content remains the same */}
         <div className="container mx-auto px-4">
@@ -197,7 +380,7 @@ export default function Home() {
                 <ul className="list-disc list-inside mb-4 text-gray-300">
                   <li>TOEFL iBT Athletics Excellence Grant</li>
                   <li>ComEd Scholar</li>
-                  <li>Dean's List (Spring 2024)</li>
+                  <li>President's List (Spring 2025)</li>
                 </ul>
 
                 <h4 className="font-bold text-lg mb-2 text-green-400">Relevant Coursework</h4>
@@ -225,9 +408,9 @@ export default function Home() {
                 <div className="mt-6 flex items-center">
                   <div className="mr-4 text-yellow-400 font-bold">PROGRESS</div>
                   <div className="h-4 bg-gray-700 rounded-full flex-1">
-                    <div className="h-full bg-gradient-to-r from-green-500 to-yellow-400 rounded-full w-1/4"></div>
+                    <div className="h-full bg-gradient-to-r from-green-500 to-yellow-400 rounded-full w-1/2"></div>
                   </div>
-                  <div className="ml-4 text-yellow-400 font-bold">25%</div>
+                  <div className="ml-4 text-yellow-400 font-bold">50%</div>
                 </div>
               </div>
             </div>
@@ -240,7 +423,49 @@ export default function Home() {
         <h2 className="text-4xl font-bold mb-12 pixel-text text-red-400 text-center">EXPERIENCE & LEADERSHIP</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Experience 1 */}
+          {/* Experience 1 - ComEd Scholar */}
+          <Card className="bg-gray-800 border-2 border-yellow-500 overflow-hidden hover-animate hover-glow-yellow">
+            <CardHeader className="bg-gray-700">
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle className="text-xl text-yellow-400">Project Manager</CardTitle>
+                  <CardDescription>ComEd Future of Energy Scholar</CardDescription>
+                </div>
+                <Badge className="bg-yellow-500">2025</Badge>
+              </div>
+              <CardDescription className="text-gray-300">January 2025 - May 2025</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ul className="space-y-2 text-gray-300">
+                <li className="flex items-start">
+                  <span className="text-yellow-400 mr-2">→</span>
+                  <span>
+                    Designed the "Endless Bio Cycle" concept with a 4-person team, outlining an on-site unit that turns restaurant waste oil into ASTM-grade biodiesel
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-yellow-400 mr-2">→</span>
+                  <span>
+                    Built a cost model showing that converting 100+ gal of oil per site each month can cut diesel spending 43% using in-house feedstock
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-yellow-400 mr-2">→</span>
+                  <span>
+                    Presented the plan to ComEd engineers, demonstrating how it could supply ~10% of a restaurant's power needs while eliminating disposal fees and emissions
+                  </span>
+                </li>
+              </ul>
+              <div className="mt-4 flex items-center">
+                <span className="text-yellow-400 font-bold mr-2">XP GAINED:</span>
+                <div className="h-2 bg-gray-700 rounded-full flex-1">
+                  <div className="h-full bg-yellow-500 rounded-full w-4/5"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Experience 2 - Digital Navigator */}
           <Card className="bg-gray-800 border-2 border-red-500 overflow-hidden hover-animate hover-glow-red">
             <CardHeader className="bg-gray-700">
               <div className="flex justify-between items-start">
@@ -255,23 +480,21 @@ export default function Home() {
             <CardContent className="pt-6">
               <ul className="space-y-2 text-gray-300">
                 <li className="flex items-start">
-                  <span className="text-green-400 mr-2">→</span>
+                  <span className="text-red-400 mr-2">→</span>
                   <span>
-                    Conducted 20+ workshops and trained 150+ community members on essential technology skills while
-                    distributing 400+ laptops
+                    Improving digital access by distributing over 400+ laptops to individuals in need, ensuring connectivity and resource availability
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-400 mr-2">→</span>
+                  <span className="text-red-400 mr-2">→</span>
                   <span>
-                    Expanded digital inclusion by reaching 10+ neighborhoods and providing 150+ one-on-one training
-                    sessions
+                    Increasing digital literacy by conducting over 20+ workshops and training over 150+ community members on essential technology skills
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-green-400 mr-2">→</span>
+                  <span className="text-red-400 mr-2">→</span>
                   <span>
-                    Promoted digital literacy by engaging 2,000+ participants through outreach and training efforts
+                    Expanding digital inclusion by reaching over 10+ neighborhoods and providing over 150+ one-on-one training sessions
                   </span>
                 </li>
               </ul>
@@ -284,37 +507,37 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          {/* Experience 2 */}
-          <Card className="bg-gray-800 border-2 border-yellow-500 overflow-hidden hover-animate hover-glow-yellow">
+          {/* Experience 3 - Cyber Force Competition */}
+          <Card className="bg-gray-800 border-2 border-blue-500 overflow-hidden hover-animate hover-glow-blue">
             <CardHeader className="bg-gray-700">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-xl text-yellow-400">Team Leader</CardTitle>
+                  <CardTitle className="text-xl text-blue-400">Team Leader</CardTitle>
                   <CardDescription>U.S. Department of Energy Cyber Force Competition</CardDescription>
                 </div>
-                <Badge className="bg-gray-500">2023</Badge>
+                <Badge className="bg-blue-500">2023</Badge>
               </div>
               <CardDescription className="text-gray-300">November 2023</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <ul className="space-y-2 text-gray-300">
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">→</span>
-                  <span>Participated in a national cybersecurity event hosted by the Department of Energy</span>
+                  <span className="text-blue-400 mr-2">→</span>
+                  <span>Led a team of 4 in a national cyber-physical infrastructure defense simulation, ranking in the top 10% out of 100+ teams</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">→</span>
+                  <span className="text-blue-400 mr-2">→</span>
                   <span>
-                    Gained foundational skills in network security, penetration testing, and incident response
+                    Executed real-time threat detection, penetration testing, and incident response against simulated cyber attacks
                   </span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-yellow-400 mr-2">→</span>
-                  <span>Developed risk management expertise through hands-on projects and guided learning</span>
+                  <span className="text-blue-400 mr-2">→</span>
+                  <span>Demonstrated hands-on expertise in network security, red teaming, and risk mitigation in a high-pressure, competitive setting</span>
                 </li>
               </ul>
               <div className="mt-4 flex items-center">
-                <span className="text-yellow-400 font-bold mr-2">XP GAINED:</span>
+                <span className="text-blue-400 font-bold mr-2">XP GAINED:</span>
                 <div className="h-2 bg-gray-700 rounded-full flex-1">
                   <div className="h-full bg-yellow-500 rounded-full w-3/5"></div>
                 </div>
@@ -322,44 +545,47 @@ export default function Home() {
             </CardContent>
           </Card>
 
-          {/* Experience 3 */}
+          {/* Experience 4 - Braven Accelerator */}
           <Card className="bg-gray-800 border-2 border-green-500 overflow-hidden hover-animate hover-glow-green">
             <CardHeader className="bg-gray-700">
               <div className="flex justify-between items-start">
                 <div>
-                  <CardTitle className="text-xl text-green-400">Braven Accelerator Fellow</CardTitle>
-                  <CardDescription>Chicago, Illinois</CardDescription>
+                  <CardTitle className="text-xl text-green-400">Lead Researcher</CardTitle>
+                  <CardDescription>Braven Accelerator</CardDescription>
                 </div>
-                <Badge className="bg-green-500">Current</Badge>
+                <Badge className="bg-green-500">2025</Badge>
               </div>
-              <CardDescription className="text-gray-300">January 2024 - Present</CardDescription>
+              <CardDescription className="text-gray-300">January 2025 - May 2025</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <ul className="space-y-2 text-gray-300">
                 <li className="flex items-start">
                   <span className="text-green-400 mr-2">→</span>
-                  <span>
-                    Participating in a career development and leadership accelerator to enhance professional skills
-                  </span>
+                  <span>Led a 5-member capstone team researching ways to boost Chicago Sky Foundation outreach to high-school students</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-400 mr-2">→</span>
-                  <span>Developing networking abilities and problem-solving through team-based projects</span>
+                  <span>Conducted 15 interviews and analyzed 50+ survey responses, pinpointing 3 critical awareness gaps</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-400 mr-2">→</span>
-                  <span>Completing workshops on communication, career planning, and data-driven decision-making</span>
+                  <span>Developed the "Skybound" ambassador-mentorship program, projected to engage 200+ underserved students per school and raise event turnout 50%</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-400 mr-2">→</span>
+                  <span>Presented the "Skybound" proposal to a diverse audience of 40+, including Braven leadership, Chicago Sky Foundation representatives, and industry professionals</span>
                 </li>
               </ul>
               <div className="mt-4 flex items-center">
                 <span className="text-green-400 font-bold mr-2">XP GAINED:</span>
                 <div className="h-2 bg-gray-700 rounded-full flex-1">
-                  <div className="h-full bg-green-500 rounded-full w-2/3"></div>
+                  <div className="h-full bg-green-500 rounded-full w-4/5"></div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
+          {/* Experience 5 */}
           {/* Experience 4 */}
           <Card className="bg-gray-800 border-2 border-blue-500 overflow-hidden hover-animate hover-glow-blue">
             <CardHeader className="bg-gray-700">
@@ -400,6 +626,63 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Certificates Section */}
+      <section id="certificates" className="py-20 bg-transparent">
+        <div className="container mx-auto px-4">
+          <h2 className="text-4xl font-bold mb-12 pixel-text text-yellow-400 text-center">CERTIFICATES</h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* IBM Certificate */}
+            <Card className="bg-gray-800 border-2 border-blue-500 overflow-hidden hover-animate hover-glow-blue">
+              <div className="h-48 bg-gray-700 relative flex items-center justify-center">
+                <Cpu className="h-16 w-16 text-blue-400" />
+                <div className="absolute top-2 right-2">
+                  <Badge className="bg-blue-400 text-black">Jul 2024</Badge>
+                </div>
+              </div>
+              <CardHeader>
+                <CardTitle className="text-xl text-blue-400">Artificial Intelligence Fundamentals</CardTitle>
+                <CardDescription>IBM</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300 mb-4">
+                  Gained comprehensive understanding of AI fundamentals, including machine learning, neural networks, and AI applications in various industries.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="border-blue-500 text-blue-500">AI</Badge>
+                  <Badge variant="outline" className="border-blue-500 text-blue-500">Machine Learning</Badge>
+                  <Badge variant="outline" className="border-blue-500 text-blue-500">Neural Networks</Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Google Certificate */}
+            <Card className="bg-gray-800 border-2 border-green-500 overflow-hidden hover-animate hover-glow-green">
+              <div className="h-48 bg-gray-700 relative flex items-center justify-center">
+                <Award className="h-16 w-16 text-green-400" />
+                <div className="absolute top-2 right-2">
+                  <Badge className="bg-green-400 text-black">Feb 2022</Badge>
+                </div>
+              </div>
+              <CardHeader>
+                <CardTitle className="text-xl text-green-400">Fundamentals of Digital Marketing</CardTitle>
+                <CardDescription>Google Garage</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-300 mb-4">
+                  Completed comprehensive training on digital marketing essentials, including SEO, social media marketing, and online business strategies.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Badge variant="outline" className="border-green-500 text-green-500">Digital Marketing</Badge>
+                  <Badge variant="outline" className="border-green-500 text-green-500">SEO</Badge>
+                  <Badge variant="outline" className="border-green-500 text-green-500">Social Media</Badge>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
       {/* Projects Section */}
       <section id="projects" className="py-20 bg-transparent">
         <div className="container mx-auto px-4">
@@ -425,7 +708,7 @@ export default function Home() {
 
             <TabsContent value="all" className="mt-0">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Project 1 */}
+                {/* Project 1 - SmartPet+ */}
                 <Card className="bg-gray-800 border-2 border-green-500 overflow-hidden hover-animate hover-glow-green">
                   <div className="h-48 bg-gray-700 relative">
                     <Image
@@ -445,8 +728,7 @@ export default function Home() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-300 mb-4">
-                      A web application that uses machine learning to identify pet breeds from images and generates
-                      AI-powered stories about them.
+                      Built a real-time Flask web app that identifies pet breeds from user photos by orchestrating Python, machine-learning models, REST endpoints, and the Microsoft Azure Computer Vision API.
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       <Badge variant="outline" className="border-green-500 text-green-500">
@@ -456,10 +738,13 @@ export default function Home() {
                         Flask
                       </Badge>
                       <Badge variant="outline" className="border-green-500 text-green-500">
-                        OpenAI
+                        Azure
                       </Badge>
                       <Badge variant="outline" className="border-green-500 text-green-500">
-                        Azure
+                        OpenAI GPT-3.5
+                      </Badge>
+                      <Badge variant="outline" className="border-green-500 text-green-500">
+                        Computer Vision
                       </Badge>
                     </div>
                     <div className="flex items-center">
@@ -470,19 +755,83 @@ export default function Home() {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      className="border-green-500 text-green-500 hover:bg-green-500 hover:text-black hover-scale"
-                    >
-                      View Details
-                    </Button>
-                    <Button size="icon" variant="ghost" className="hover-scale">
-                      <ExternalLink className="h-5 w-5" />
-                    </Button>
+                    <Link href="/projects/smartpet" className="w-full">
+                      <Button
+                        variant="outline"
+                        className="w-full border-green-500 text-green-500 hover:bg-green-500 hover:text-black hover-scale"
+                      >
+                        View Details
+                      </Button>
+                    </Link>
+                    <a href="#" target="_blank" rel="noopener noreferrer">
+                      <Button size="icon" variant="ghost" className="hover-scale">
+                        <ExternalLink className="h-5 w-5" />
+                      </Button>
+                    </a>
                   </CardFooter>
                 </Card>
 
-                {/* Project 2 */}
+                {/* Project 2 - Personal Portfolio*/}
+                <Card className="bg-gray-800 border-2 border-purple-500 overflow-hidden hover-animate hover-glow-purple">
+                  <div className="h-48 bg-gray-700 relative">
+                    <Image
+                      src="/placeholder.svg?height=200&width=400"
+                      alt="Personal Portfolio Website"
+                      width={400}
+                      height={200}
+                      className="object-cover w-full h-full"
+                    />
+                    <div className="absolute top-2 right-2">
+                      <Badge className="bg-yellow-400 text-black">Latest</Badge>
+                    </div>
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-xl text-purple-400">Personal Portfolio Website</CardTitle>
+                    <CardDescription>Interactive Developer Portfolio Website</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-300 mb-4">
+                      A modern, responsive portfolio website built with Next.js, TypeScript, and Tailwind CSS, featuring a terminal-style interface, interactive elements, and a retro gaming aesthetic.
+                    </p>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <Badge variant="outline" className="border-purple-500 text-purple-500">
+                        Next.js
+                      </Badge>
+                      <Badge variant="outline" className="border-purple-500 text-purple-500">
+                        TypeScript
+                      </Badge>
+                      <Badge variant="outline" className="border-purple-500 text-purple-500">
+                        Tailwind CSS
+                      </Badge>
+                      <Badge variant="outline" className="border-purple-500 text-purple-500">
+                        Vercel
+                      </Badge>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="text-purple-400 font-bold mr-2">COMPLETION:</span>
+                      <div className="h-2 bg-gray-700 rounded-full flex-1">
+                        <div className="h-full bg-purple-500 rounded-full w-full"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Link href="/projects/portfolio" className="w-full">
+                      <Button
+                        variant="outline"
+                        className="w-full border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-black hover-scale"
+                      >
+                        View Details
+                      </Button>
+                    </Link>
+                    <a href="#" target="_blank" rel="noopener noreferrer">
+                      <Button size="icon" variant="ghost" className="hover-scale">
+                        <ExternalLink className="h-5 w-5" />
+                      </Button>
+                    </a>
+                  </CardFooter>
+                </Card>
+
+                {/* Project 2 - Airline Crew Scheduling */}
                 <Card className="bg-gray-800 border-2 border-blue-500 overflow-hidden hover-animate hover-glow-blue">
                   <div className="h-48 bg-gray-700 relative">
                     <Image
@@ -499,8 +848,7 @@ export default function Home() {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-300 mb-4">
-                      Research project on optimizing airline crew scheduling by applying genetic and evolutionary
-                      algorithms to improve efficiency.
+                      Conducted research on optimizing airline crew scheduling by applying genetic algorithms to improve efficiency. Investigated evolutionary algorithms and mathematical models to enhance crew allocation and minimize scheduling conflicts.
                     </p>
                     <div className="flex flex-wrap gap-2 mb-4">
                       <Badge variant="outline" className="border-blue-500 text-blue-500">
@@ -512,6 +860,9 @@ export default function Home() {
                       <Badge variant="outline" className="border-blue-500 text-blue-500">
                         Optimization
                       </Badge>
+                      <Badge variant="outline" className="border-blue-500 text-blue-500">
+                        Python
+                      </Badge>
                     </div>
                     <div className="flex items-center">
                       <span className="text-blue-400 font-bold mr-2">COMPLETION:</span>
@@ -521,12 +872,14 @@ export default function Home() {
                     </div>
                   </CardContent>
                   <CardFooter className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white hover-scale"
-                    >
-                      View Details
-                    </Button>
+                    <Link href="/projects/airline-scheduling" className="w-full">
+                      <Button
+                        variant="outline"
+                        className="w-full border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white hover-scale"
+                      >
+                        View Details
+                      </Button>
+                    </Link>
                     <Button size="icon" variant="ghost" className="hover-scale">
                       <ExternalLink className="h-5 w-5" />
                     </Button>
@@ -1075,10 +1428,12 @@ export default function Home() {
               <div className="mt-8">
                 <h4 className="font-bold mb-2 text-yellow-400">Connect With Me:</h4>
                 <div className="flex gap-4">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="rounded-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale"
+                  <a
+                    href="https://www.linkedin.com/in/borismojsa/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-full border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale p-2 transition-colors duration-300"
+                    aria-label="LinkedIn Profile"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -1096,11 +1451,13 @@ export default function Home() {
                       <rect x="2" y="9" width="4" height="12"></rect>
                       <circle cx="4" cy="4" r="2"></circle>
                     </svg>
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="rounded-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale"
+                  </a>
+                  <a
+                    href="https://github.com/BorisMojsa/Portfolio-Website"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-full border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale p-2 transition-colors duration-300"
+                    aria-label="GitHub Profile"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -1116,11 +1473,13 @@ export default function Home() {
                     >
                       <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                     </svg>
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="rounded-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale"
+                  </a>
+                  <a
+                    href="https://www.instagram.com/mojjsa/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center rounded-full border-2 border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale p-2 transition-colors duration-300"
+                    aria-label="Instagram Profile"
                   >
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -1138,7 +1497,7 @@ export default function Home() {
                       <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                       <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
                     </svg>
-                  </Button>
+                  </a>
                 </div>
               </div>
             </div>
