@@ -381,7 +381,6 @@ export default function Home() {
                   <li>TOEFL iBT Athletics Excellence Grant</li>
                   <li>ComEd Scholar</li>
                   <li>President's List (Spring 2025)</li>
-                  <li>Dean's List (Spring & Fall 2024, Spring 2025)</li>
                 </ul>
 
                 <h4 className="font-bold text-lg mb-2 text-green-400">Relevant Coursework</h4>
@@ -396,10 +395,13 @@ export default function Home() {
                     Software Engineering
                   </Badge>
                   <Badge variant="outline" className="border-gray-500">
-                    Calculus II
+                    Calculus 1
                   </Badge>
                   <Badge variant="outline" className="border-gray-500">
-                    Calculus III
+                    Calculus 2
+                  </Badge>
+                  <Badge variant="outline" className="border-gray-500">
+                    Calculus 3
                   </Badge>
                 </div>
 
@@ -454,24 +456,25 @@ export default function Home() {
                   </span>
                 </li>
               </ul>
-              <div className="mt-4 flex items-center">
+              <div className="mt-4 flex items-center mb-4">
                 <span className="text-yellow-400 font-bold mr-2">XP GAINED:</span>
                 <div className="h-2 bg-gray-700 rounded-full flex-1">
                   <div className="h-full bg-yellow-500 rounded-full w-4/5"></div>
                 </div>
               </div>
-            </CardContent>
-            <CardFooter className="mt-auto">
-              <Link href="/experience/comed-scholar" className="w-full">
-                <Button variant="outline" className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black hover-scale">
+              <Link href="/experience/comedscholar">
+                <Button 
+                  variant="outline" 
+                  className="w-full border-yellow-500 text-yellow-500 hover:bg-yellow-500 hover:text-black hover-scale"
+                >
                   View Details
                 </Button>
               </Link>
-            </CardFooter>
+            </CardContent>
           </Card>
 
           {/* Experience 2 - Digital Navigator */}
-          <Card className="bg-gray-800 border-2 border-red-500 overflow-hidden hover-animate hover-glow-red flex flex-col h-full">
+          <Card className="bg-gray-800 border-2 border-red-500 overflow-hidden hover-animate hover-glow-red">
             <CardHeader className="bg-gray-700">
               <div className="flex justify-between items-start">
                 <div>
@@ -482,8 +485,8 @@ export default function Home() {
               </div>
               <CardDescription className="text-gray-300">February 2024 - Present</CardDescription>
             </CardHeader>
-            <CardContent className="pt-6 flex-grow">
-              <ul className="space-y-2 text-gray-300 mb-4">
+            <CardContent className="pt-6">
+              <ul className="space-y-2 text-gray-300">
                 <li className="flex items-start">
                   <span className="text-red-400 mr-2">→</span>
                   <span>
@@ -498,164 +501,6 @@ export default function Home() {
                 </li>
                 <li className="flex items-start">
                   <span className="text-red-400 mr-2">→</span>
-                  <span>
-                    Expanding digital inclusion by reaching over 10+ neighborhoods and providing over 150+ one-on-one training sessions
-                  </span>
-                </li>
-              </ul>
-              <div className="mt-4 flex items-center mb-6">
-                <span className="text-red-400 font-bold mr-2">XP GAINED:</span>
-                <div className="h-2 bg-gray-700 rounded-full flex-1">
-                  <div className="h-full bg-red-500 rounded-full w-4/5"></div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="mt-auto">
-              <Link href="/experience/digital-navigator" className="w-full">
-                <Button variant="outline" className="w-full border-red-500 text-red-500 hover:bg-red-500 hover:text-white hover-scale">
-                  View Details
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-
-          {/* Experience 3 - Cyber Force Competition */}
-          <Card className="bg-gray-800 border-2 border-blue-500 overflow-hidden hover-animate hover-glow-blue flex flex-col h-full">
-            <CardHeader className="bg-gray-700">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl text-blue-400">Team Leader</CardTitle>
-                  <CardDescription>U.S. Department of Energy Cyber Force Competition</CardDescription>
-                </div>
-                <Badge className="bg-blue-500">2023</Badge>
-              </div>
-              <CardDescription className="text-gray-300">November 2023</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 flex-grow">
-              <ul className="space-y-2 text-gray-300 mb-4">
-                <li className="flex items-start">
-                  <span className="text-blue-400 mr-2">→</span>
-                  <span>Led a team of 4 in a national cyber-physical infrastructure defense simulation, ranking in the top 10% out of 100+ teams</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-blue-400 mr-2">→</span>
-                  <span>
-                    Executed real-time threat detection, penetration testing, and incident response against simulated cyber attacks
-                  </span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-blue-400 mr-2">→</span>
-                  <span>Demonstrated hands-on expertise in network security, red teaming, and risk mitigation in a high-pressure, competitive setting</span>
-                </li>
-              </ul>
-              <div className="mt-4 flex items-center mb-6">
-                <span className="text-blue-400 font-bold mr-2">XP GAINED:</span>
-                <div className="h-2 bg-gray-700 rounded-full flex-1">
-                  <div className="h-full bg-yellow-500 rounded-full w-3/5"></div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="mt-auto">
-              <Link href="/experience/cyber-force" className="w-full">
-                <Button variant="outline" className="w-full border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white hover-scale">
-                  View Details
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-
-          {/* Experience 4 - Braven Accelerator */}
-          <Card className="bg-gray-800 border-2 border-green-500 overflow-hidden hover-animate hover-glow-green flex flex-col h-full">
-            <CardHeader className="bg-gray-700">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl text-green-400">Lead Researcher</CardTitle>
-                  <CardDescription>Braven Accelerator</CardDescription>
-                </div>
-                <Badge className="bg-green-500">2025</Badge>
-              </div>
-              <CardDescription className="text-gray-300">January 2025 - May 2025</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <ul className="space-y-2 text-gray-300">
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">→</span>
-                  <span>Led a 5-member capstone team researching ways to boost Chicago Sky Foundation outreach to high-school students</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">→</span>
-                  <span>Conducted 15 interviews and analyzed 50+ survey responses, pinpointing 3 critical awareness gaps</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">→</span>
-                  <span>Developed the "Skybound" ambassador-mentorship program, projected to engage 200+ underserved students per school and raise event turnout 50%</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-green-400 mr-2">→</span>
-                  <span>Presented the "Skybound" proposal to a diverse audience of 40+, including Braven leadership, Chicago Sky Foundation representatives, and industry professionals</span>
-                </li>
-              </ul>
-              <div className="mt-4 flex items-center">
-                <span className="text-green-400 font-bold mr-2">XP GAINED:</span>
-                <div className="h-2 bg-gray-700 rounded-full flex-1">
-                  <div className="h-full bg-green-500 rounded-full w-4/5"></div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="mt-auto">
-              <Link href="/experience/braven-accelerator" className="w-full">
-                <Button variant="outline" className="w-full border-green-500 text-green-500 hover:bg-green-500 hover:text-black hover-scale">
-                  View Details
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-
-          {/* Experience 5 - Youth for the Dialogue in the Local Community */}
-          <Card className="bg-gray-800 border-2 border-purple-500 overflow-hidden hover-animate hover-glow-purple flex flex-col h-full">
-            <CardHeader className="bg-gray-700">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl text-purple-400">Youth Representative & Community Leader</CardTitle>
-                  <CardDescription>Youth for the Dialogue in the Local Community</CardDescription>
-                </div>
-                <Badge className="bg-purple-500">2019-2023</Badge>
-              </div>
-              <CardDescription className="text-gray-300">Belgrade, Serbia</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 flex-grow">
-              <ul className="space-y-2 text-gray-300 mb-4">
-                <li className="flex items-start">
-                  <span className="text-purple-400 mr-2">→</span>
-                  <span>Founded and led Youth for the Dialogue, promoting understanding among diverse communities through events and workshops</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-purple-400 mr-2">→</span>
-                  <span>Represented youth interests in collaboration with the Ana and Vlade Divac Foundation</span>
-                </li>
-                <li className="flex items-start">
-                  <span className="text-purple-400 mr-2">→</span>
-                  <span>Organized 15+ community events engaging 600+ participants and developed impactful community projects</span>
-                </li>
-              </ul>
-              <div className="mt-4 flex items-center mb-6">
-                <span className="text-purple-400 font-bold mr-2">XP GAINED:</span>
-                <div className="h-2 bg-gray-700 rounded-full flex-1">
-                  <div className="h-full bg-purple-500 rounded-full w-4/5"></div>
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="mt-auto">
-              <Link href="/experience/youth-for-the-dialogue" className="w-full">
-                <Button variant="outline" className="w-full border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white hover-scale">
-                  View Details
-                </Button>
-              </Link>
-            </CardFooter>
-          </Card>
-        </div>
-      </section>
-
       {/* Certificates Section */}
       <section id="certificates" className="py-20 bg-transparent">
         <div className="container mx-auto px-4">
@@ -1194,11 +1039,9 @@ export default function Home() {
             </div>
 
             <div className="mt-12 text-center">
-              <a href="https://worldathletics.org/athletes/serbia/boris-mojsa-14882855" target="_blank" rel="noopener noreferrer">
-                <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 py-6 text-lg rounded-none border-b-4 border-yellow-600 hover:translate-y-1 transition-transform hover-scale">
-                  VIEW ATHLETIC PROFILE <ArrowRight className="ml-2" />
-                </Button>
-              </a>
+              <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 py-6 text-lg rounded-none border-b-4 border-yellow-600 hover:translate-y-1 transition-transform hover-scale">
+                VIEW ATHLETIC PROFILE <ArrowRight className="ml-2" />
+              </Button>
             </div>
           </div>
         </div>
