@@ -1,15 +1,14 @@
 import type { Config } from "tailwindcss"
+import animate from "tailwindcss-animate"
 
-const config = {
+const config: Config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx,mdx}",
     "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{ts,tsx}",
+    "./pages/**/*.{ts,tsx}",
   ],
-  prefix: "",
   theme: {
     container: {
       center: true,
@@ -53,37 +52,11 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Custom colors for the retro game theme
-        red: {
-          400: "#ff6b6b",
-          500: "#ff5252",
-          600: "#ff3838",
-          700: "#ff1f1f",
-        },
-        yellow: {
-          400: "#ffda79",
-          500: "#ffd369",
-          600: "#ffc952",
-          700: "#ffbb33",
-        },
-        green: {
-          400: "#7bed9f",
-          500: "#2ed573",
-          600: "#26bc66",
-          700: "#20a55b",
-        },
-        blue: {
-          400: "#70a1ff",
-          500: "#1e90ff",
-          600: "#187bcd",
-          700: "#1464a5",
-        },
-        purple: {
-          400: "#9c88ff",
-          500: "#8c7ae6",
-          600: "#7c6ad8",
-          700: "#6c5ce7",
-        },
+        red: { 400: "#ff6b6b", 500: "#ff5252", 600: "#ff3838", 700: "#ff1f1f" },
+        yellow: { 400: "#ffda79", 500: "#ffd369", 600: "#ffc952", 700: "#ffbb33" },
+        green: { 400: "#7bed9f", 500: "#2ed573", 600: "#26bc66", 700: "#20a55b" },
+        blue: { 400: "#70a1ff", 500: "#1e90ff", 600: "#187bcd", 700: "#1464a5" },
+        purple: { 400: "#9c88ff", 500: "#8c7ae6", 600: "#7c6ad8", 700: "#6c5ce7" },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -106,7 +79,8 @@ const config = {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config
+  plugins: [animate],
+}
 
 export default config
+

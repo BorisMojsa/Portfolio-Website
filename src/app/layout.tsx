@@ -15,11 +15,11 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en">
-      <body>
+    <html lang="en" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AnimatedBackground />
-          {children}
+          <div className="relative z-10">{children}</div>
         </ThemeProvider>
       </body>
     </html>

@@ -87,14 +87,19 @@ export default function Home() {
           <Badge className="bg-purple-500 px-3 py-1 text-sm hover-scale">Flask</Badge>
         </div>
         <div className="flex flex-wrap gap-4 justify-center">
-          <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-6 py-3 rounded-none border-b-4 border-yellow-600 hover:translate-y-1 transition-transform hover-scale">
-            VIEW PROJECTS <ArrowRight className="ml-2 h-4 w-4" />
+          <Button asChild className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-6 py-3 rounded-none border-b-4 border-yellow-600 hover:translate-y-1 transition-transform hover-scale">
+            <a href="#projects" target="_blank" rel="noopener noreferrer">
+              VIEW PROJECTS <ArrowRight className="ml-2 h-4 w-4" />
+            </a>
           </Button>
           <Button
+            asChild
             variant="outline"
             className="border-green-500 text-green-500 hover:bg-green-500 hover:text-black font-bold px-6 py-3 rounded-none border-b-4 hover:translate-y-1 transition-transform hover-scale"
           >
-            CONTACT ME <Mail className="ml-2 h-4 w-4" />
+            <a href="#contact">
+              CONTACT ME <Mail className="ml-2 h-4 w-4" />
+            </a>
           </Button>
         </div>
 
@@ -687,8 +692,10 @@ export default function Home() {
           </Tabs>
 
           <div className="mt-12 text-center">
-            <Button className="bg-purple-500 hover:bg-purple-600 text-white font-bold px-8 py-6 text-lg rounded-none border-b-4 border-purple-700 hover:translate-y-1 transition-transform hover-scale">
-              VIEW ALL PROJECTS <ArrowRight className="ml-2" />
+            <Button asChild className="bg-purple-500 hover:bg-purple-600 text-white font-bold px-8 py-6 text-lg rounded-none border-b-4 border-purple-700 hover:translate-y-1 transition-transform hover-scale">
+              <a href="#projects" target="_blank" rel="noopener noreferrer">
+                VIEW ALL PROJECTS <ArrowRight className="ml-2" />
+              </a>
             </Button>
           </div>
         </div>
