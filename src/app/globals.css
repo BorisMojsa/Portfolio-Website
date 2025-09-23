@@ -178,3 +178,122 @@
 .card-shadow {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
 }
+
+/* Seasonal background overlays */
+.season-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.season-overlay span {
+  position: absolute;
+  top: -10%;
+  will-change: transform;
+}
+
+.rain-drop {
+  width: 3px;
+  height: 22px;
+  background-color: currentColor;
+  opacity: 0.55;
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.2));
+  animation: season-rain linear infinite;
+}
+
+.snow-flake {
+  width: 8px;
+  height: 8px;
+  background-color: currentColor;
+  border-radius: 2px;
+  opacity: 0.85;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+  animation: season-snow linear infinite;
+}
+
+.leaf-drop {
+  width: 14px;
+  height: 16px;
+  background-color: currentColor;
+  border-radius: 45% 65% 65% 35%;
+  opacity: 0.8;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+  animation: season-leaf linear infinite;
+}
+
+.petal-drop {
+  width: 10px;
+  height: 12px;
+  background-color: currentColor;
+  border-radius: 55% 65% 65% 55%;
+  opacity: 0.75;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.2);
+  animation: season-petal ease-in-out infinite;
+}
+
+@keyframes season-rain {
+  0% {
+    transform: translate3d(0, -120vh, 0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate3d(-6px, 120vh, 0);
+    opacity: 0;
+  }
+}
+
+@keyframes season-snow {
+  0% {
+    transform: translate3d(0, -120vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(12px, -40vh, 0) rotate(180deg);
+  }
+  100% {
+    transform: translate3d(-12px, 120vh, 0) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes season-leaf {
+  0% {
+    transform: translate3d(0, -120vh, 0) rotate(-15deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: 0.95;
+  }
+  50% {
+    transform: translate3d(20px, -40vh, 0) rotate(18deg);
+  }
+  100% {
+    transform: translate3d(-20px, 120vh, 0) rotate(60deg);
+    opacity: 0;
+  }
+}
+
+@keyframes season-petal {
+  0% {
+    transform: translate3d(0, -120vh, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(-15px, -50vh, 0) rotate(22deg);
+  }
+  100% {
+    transform: translate3d(15px, 120vh, 0) rotate(55deg);
+    opacity: 0;
+  }
+}

@@ -2,8 +2,39 @@
 
 import { useEffect, useRef } from "react"
 
+type AnimatedPalette = {
+  sky: string
+  grass: string
+  track: string
+  lane: string
+  treeDark: string
+  treeLight: string
+  treeTrunk: string
+  mountainDark: string
+  mountainLight: string
+  mountainSnow: string
+  cloud: string
+  cloudShadow: string
+}
+
+const defaultPalette: AnimatedPalette = {
+  sky: "#62b8ff",
+  grass: "#5ebc3f",
+  track: "#b86f50",
+  lane: "#ffffff",
+  treeDark: "#2a7302",
+  treeLight: "#52a549",
+  treeTrunk: "#7d5b24",
+  mountainDark: "#3a4f6a",
+  mountainLight: "#5c7b9c",
+  mountainSnow: "#ffffff",
+  cloud: "#ffffff",
+  cloudShadow: "#d0d0d0",
+}
+
 export function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const paletteRef = useRef<AnimatedPalette>(defaultPalette)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -11,6 +42,18 @@ export function AnimatedBackground() {
 
     const ctx = canvas.getContext("2d", { alpha: false })
     if (!ctx) return
+
+    const handleSeasonChange = (event: Event) => {
+      const detail = (event as CustomEvent<{ palette?: AnimatedPalette }>).detail
+      if (detail?.palette) {
+        paletteRef.current = {
+          ...paletteRef.current,
+          ...detail.palette,
+        }
+      }
+    }
+
+    window.addEventListener("seasonChange", handleSeasonChange)
 
     // Runner sprite properties need to be defined before resize logic
     const runnerWidth = 32
@@ -46,18 +89,6 @@ export function AnimatedBackground() {
       runnerY = vh * 0.7 - runnerHeight
     }
     window.addEventListener("resize", onResize)
-
-    // Classic retro game colors - limited palette
-    const skyColor = "#5CBCFF" // Classic blue sky
-    const trackColor = "#B86F50" // Classic brown track
-    const laneColor = "#FFFFFF" // White lane markers
-    const grassColor = "#5EBC3F" // Classic green grass
-    const treeDarkColor = "#2A7302" // Dark green for trees
-    const treeLightColor = "#52A549" // Light green for trees
-    const treeTrunkColor = "#7D5B24" // Brown for tree trunks
-    const mountainDarkColor = "#3A4F6A" // Distant mountain base
-    const mountainLightColor = "#5C7B9C" // Highlight shade for mountains
-    const mountainSnowColor = "#FFFFFF" // Snow caps for mountains
 
     // Cloud properties with classic pixelated style
     const clouds = [] as Array<{ x: number; y: number; width: number; height: number; speed: number; type: number }>
@@ -101,7 +132,7 @@ export function AnimatedBackground() {
     for (let i = 0; i < treeCount; i++) {
       trees.push({
         x: Math.random() * vw,
-        size: Math.floor(Math.random() * 3) + 1, // 1, 2, or 3 (small, medium, large)
+        size: Math.floor(Math.random() * 3) + 2, // 2, 3, or 4 (no tiny trees)
         type: Math.floor(Math.random() * 2), // 0 or 1 (different tree types)
         verticalFactor: Math.random(), // Random vertical placement within grass
       })
@@ -168,13 +199,14 @@ export function AnimatedBackground() {
 
     // Draw a classic pixelated cloud
     const drawCloud = (x, y, width, height, type) => {
+      const palette = paletteRef.current
       // Round to nearest pixel for crisp edges
       x = Math.floor(x)
       y = Math.floor(y)
       width = Math.floor(width)
       height = Math.floor(height)
 
-      ctx.fillStyle = "#FFFFFF"
+      ctx.fillStyle = palette.cloud
 
       // Different cloud types for variety but keeping them simple and pixelated
       if (type === 0) {
@@ -198,18 +230,19 @@ export function AnimatedBackground() {
       }
 
       // Add subtle gray underside for retro depth
-      ctx.fillStyle = "#D0D0D0"
+      ctx.fillStyle = palette.cloudShadow
       const shadowHeight = Math.max(2, Math.floor(height * 0.3))
       ctx.fillRect(x, y + height - shadowHeight, width, shadowHeight)
     }
 
     const drawMountain = (x, baseWidth, height, baseY) => {
+      const palette = paletteRef.current
       x = Math.floor(x)
       baseWidth = Math.floor(baseWidth)
       height = Math.floor(height)
       baseY = Math.floor(baseY)
 
-      ctx.fillStyle = mountainDarkColor
+      ctx.fillStyle = palette.mountainDark
       for (let i = 0; i < height; i++) {
         const progress = 1 - i / height
         const rowWidth = Math.max(1, Math.floor(baseWidth * progress))
@@ -217,7 +250,7 @@ export function AnimatedBackground() {
         ctx.fillRect(Math.floor(x - rowWidth / 2), yOffset, rowWidth, 1)
       }
 
-      ctx.fillStyle = mountainLightColor
+      ctx.fillStyle = palette.mountainLight
       for (let i = 0; i < height; i++) {
         const progress = 1 - i / height
         const rowWidth = Math.max(1, Math.floor((baseWidth * progress) * 0.35))
@@ -227,7 +260,7 @@ export function AnimatedBackground() {
 
       // Snow cap near the top
       const snowHeight = Math.max(6, Math.floor(height * 0.2))
-      ctx.fillStyle = mountainSnowColor
+      ctx.fillStyle = palette.mountainSnow
       for (let i = 0; i < snowHeight; i++) {
         const mountainRowIndex = height - 1 - i
         const progress = 1 - mountainRowIndex / height
@@ -239,6 +272,7 @@ export function AnimatedBackground() {
 
     // Draw classic pixelated trees
     const drawTree = (x, y, size, type) => {
+      const palette = paletteRef.current
       // Round to nearest pixel for crisp edges
       x = Math.floor(x)
       y = Math.floor(y)
@@ -249,13 +283,13 @@ export function AnimatedBackground() {
       const trunkWidth = size * 3
 
       // Draw tree trunk - simple rectangle
-      ctx.fillStyle = treeTrunkColor
+      ctx.fillStyle = palette.treeTrunk
       ctx.fillRect(x - trunkWidth / 2, y - trunkHeight, trunkWidth, trunkHeight)
 
       // Draw tree top based on type
       if (type === 0) {
         // Classic triangular tree (like in old games)
-        ctx.fillStyle = treeDarkColor
+        ctx.fillStyle = palette.treeDark
 
         // Simple triangle shape
         const treeWidth = scale * 4
@@ -271,7 +305,7 @@ export function AnimatedBackground() {
         }
 
         // Add a highlight stripe for depth
-        ctx.fillStyle = treeLightColor
+        ctx.fillStyle = palette.treeLight
         for (let i = 0; i < treeHeight; i++) {
           const progress = (i + 1) / treeHeight
           const rowWidth = (treeWidth * progress) / 3
@@ -281,14 +315,14 @@ export function AnimatedBackground() {
         }
       } else {
         // Blocky pixel tree (like in Minecraft or older games)
-        ctx.fillStyle = treeDarkColor
+        ctx.fillStyle = palette.treeDark
 
         // Main block
         const blockSize = scale * 3
         ctx.fillRect(x - blockSize / 2, y - trunkHeight - blockSize, blockSize, blockSize)
 
         // Top block (smaller)
-        ctx.fillStyle = treeLightColor
+        ctx.fillStyle = palette.treeLight
         const topSize = blockSize * 0.7
         ctx.fillRect(x - topSize / 2, y - trunkHeight - blockSize - topSize * 0.7, topSize, topSize * 0.7)
       }
@@ -297,7 +331,9 @@ export function AnimatedBackground() {
     // Draw track field with classic pixelated style
     const drawTrack = () => {
       // Sky - fill entire canvas first
-      ctx.fillStyle = skyColor
+      const palette = paletteRef.current
+
+      ctx.fillStyle = palette.sky
       ctx.fillRect(0, 0, vw, vh)
 
       const grassY = Math.floor(vh * 0.6)
@@ -330,7 +366,7 @@ export function AnimatedBackground() {
       }
 
       // Grass field - classic green
-      ctx.fillStyle = grassColor
+      ctx.fillStyle = palette.grass
       ctx.fillRect(0, grassY, vw, grassHeight)
 
       // Draw trees on grass
@@ -348,18 +384,18 @@ export function AnimatedBackground() {
         const maxTreeWidth = tree.size * 16 // Covers widest triangular tree
         if (tree.x < -maxTreeWidth) {
           tree.x = vw + Math.random() * vw * 0.5
-          tree.size = Math.floor(Math.random() * 3) + 1
+          tree.size = Math.floor(Math.random() * 3) + 2
           tree.type = Math.floor(Math.random() * 2)
           tree.verticalFactor = Math.random()
         }
       }
 
       // Track - classic brown
-      ctx.fillStyle = trackColor
+      ctx.fillStyle = palette.track
       ctx.fillRect(0, Math.floor(vh * 0.7), vw, Math.floor(vh * 0.3))
 
       // Lane markers - classic white lines
-      ctx.fillStyle = laneColor
+      ctx.fillStyle = palette.lane
       for (let i = 0; i < 8; i++) {
         const yPos = Math.floor(vh * (0.7 + i * 0.025))
         ctx.fillRect(0, yPos, vw, 2) // Thinner lines for more pixelated look
@@ -407,6 +443,7 @@ export function AnimatedBackground() {
 
     return () => {
       window.removeEventListener("resize", onResize)
+      window.removeEventListener("seasonChange", handleSeasonChange)
     }
   }, [])
 

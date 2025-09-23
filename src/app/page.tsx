@@ -1,3 +1,6 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, Medal, Trophy, Mail, ExternalLink, Cpu, BookOpen, Award } from "lucide-react"
@@ -5,11 +8,555 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+
+type SeasonId = "summer" | "fall" | "winter" | "spring"
+type SeasonOverlayType = "rain" | "snow" | "leaves" | "petals"
+
+interface SeasonOverlayConfig {
+  type: SeasonOverlayType
+  color: string
+}
+
+interface SeasonSkyObject {
+  type: "sun" | "moon"
+  size: number
+  color: string
+  glow: string
+  ring?: string
+}
+
+interface SeasonPalette {
+  sky: string
+  grass: string
+  track: string
+  lane: string
+  treeDark: string
+  treeLight: string
+  treeTrunk: string
+  mountainDark: string
+  mountainLight: string
+  mountainSnow: string
+  cloud: string
+  cloudShadow: string
+}
+
+interface SeasonTheme {
+  id: SeasonId
+  name: string
+  accentColor: string
+  skyObject: SeasonSkyObject
+  overlay?: SeasonOverlayConfig
+  palette: SeasonPalette
+}
+
+const OVERLAY_POSITIONS: Record<SeasonOverlayType, Array<{ left: string; delay: string; duration: string; scale: number }>> = {
+  rain: Array.from({ length: 36 }, (_, index) => ({
+    left: `${(index * 2.7) % 100}%`,
+    delay: `${(index % 12) * 0.2}s`,
+    duration: `${2.4 + (index % 6) * 0.2}s`,
+    scale: 0.8 + ((index % 3) * 0.2),
+  })),
+  snow: Array.from({ length: 32 }, (_, index) => ({
+    left: `${(index * 3.4) % 100}%`,
+    delay: `${(index % 10) * 0.35}s`,
+    duration: `${5 + (index % 5)}s`,
+    scale: 0.6 + ((index % 4) * 0.15),
+  })),
+  leaves: Array.from({ length: 28 }, (_, index) => ({
+    left: `${(index * 4.1) % 100}%`,
+    delay: `${(index % 8) * 0.35}s`,
+    duration: `${4 + (index % 5) * 0.4}s`,
+    scale: 0.8 + ((index % 3) * 0.2),
+  })),
+  petals: Array.from({ length: 30 }, (_, index) => ({
+    left: `${(index * 3.1) % 100}%`,
+    delay: `${(index % 9) * 0.3}s`,
+    duration: `${5 + (index % 5) * 0.35}s`,
+    scale: 0.75 + ((index % 4) * 0.15),
+  })),
+}
+
+const OVERLAY_CLASS_MAP: Record<SeasonOverlayType, string> = {
+  rain: "rain-drop",
+  snow: "snow-flake",
+  leaves: "leaf-drop",
+  petals: "petal-drop",
+}
+
+const SEASON_THEMES: SeasonTheme[] = [
+  {
+    id: "summer",
+    name: "Summer",
+    accentColor: "#ffe066",
+    skyObject: {
+      type: "sun",
+      size: 140,
+      color: "#ffe066",
+      glow: "rgba(255, 224, 102, 0.55)",
+      ring: "#ffcf33",
+    },
+    palette: {
+      sky: "#62b8ff",
+      grass: "#5ebc3f",
+      track: "#b86f50",
+      lane: "#ffffff",
+      treeDark: "#2a7302",
+      treeLight: "#52a549",
+      treeTrunk: "#7d5b24",
+      mountainDark: "#3a4f6a",
+      mountainLight: "#5c7b9c",
+      mountainSnow: "#ffffff",
+      cloud: "#ffffff",
+      cloudShadow: "#d0d0d0",
+    },
+  },
+  {
+    id: "fall",
+    name: "Fall",
+    accentColor: "#ffb347",
+    skyObject: {
+      type: "sun",
+      size: 120,
+      color: "#ffc65c",
+      glow: "rgba(255, 198, 92, 0.55)",
+      ring: "#ff8c42",
+    },
+    overlay: {
+      type: "leaves",
+      color: "#ff9f45",
+    },
+    palette: {
+      sky: "#ffb347",
+      grass: "#d77a2b",
+      track: "#8a4b21",
+      lane: "#ffe8cc",
+      treeDark: "#8e3b0c",
+      treeLight: "#d1701d",
+      treeTrunk: "#744019",
+      mountainDark: "#4c3529",
+      mountainLight: "#7b5642",
+      mountainSnow: "#f2e2d2",
+      cloud: "#ffe3c2",
+      cloudShadow: "#ffcfa3",
+    },
+  },
+  {
+    id: "winter",
+    name: "Winter",
+    accentColor: "#d7ecff",
+    skyObject: {
+      type: "moon",
+      size: 130,
+      color: "#f5f7ff",
+      glow: "rgba(215, 236, 255, 0.6)",
+      ring: "#b1c4e4",
+    },
+    overlay: {
+      type: "snow",
+      color: "#ffffff",
+    },
+    palette: {
+      sky: "#6c9bde",
+      grass: "#d7e3f3",
+      track: "#a3b8d6",
+      lane: "#f8fbff",
+      treeDark: "#8ea4c4",
+      treeLight: "#c5d4eb",
+      treeTrunk: "#718096",
+      mountainDark: "#2d3e58",
+      mountainLight: "#4c6a92",
+      mountainSnow: "#f8fbff",
+      cloud: "#ffffff",
+      cloudShadow: "#e2ecf9",
+    },
+  },
+  {
+    id: "spring",
+    name: "Spring",
+    accentColor: "#ffbadd",
+    skyObject: {
+      type: "sun",
+      size: 130,
+      color: "#ffd7a8",
+      glow: "rgba(255, 215, 168, 0.55)",
+      ring: "#ff9acd",
+    },
+    overlay: {
+      type: "petals",
+      color: "#ff9acd",
+    },
+    palette: {
+      sky: "#9fd7ff",
+      grass: "#6ddc7c",
+      track: "#c47a60",
+      lane: "#ffe8f4",
+      treeDark: "#3e8d5f",
+      treeLight: "#8fe5a7",
+      treeTrunk: "#805a3a",
+      mountainDark: "#324963",
+      mountainLight: "#577089",
+      mountainSnow: "#f5f8ff",
+      cloud: "#f4f8ff",
+      cloudShadow: "#ffe6f3",
+    },
+  },
+]
+
+const SeasonOverlay = ({ overlay }: { overlay?: SeasonOverlayConfig }) => {
+  if (!overlay) {
+    return null
+  }
+
+  const positions = OVERLAY_POSITIONS[overlay.type]
+
+  return (
+    <div className="season-overlay">
+      {positions.map((position, index) => (
+        <span
+          key={`${overlay.type}-${index}`}
+          className={OVERLAY_CLASS_MAP[overlay.type]}
+          style={{
+            left: position.left,
+            animationDelay: position.delay,
+            animationDuration: position.duration,
+            transform: `scale(${position.scale})`,
+            color: overlay.color,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+const SeasonSkyObjectView = ({ object }: { object: SeasonSkyObject }) => (
+  <div
+    className="absolute top-10 right-[10%] pointer-events-none transition-all"
+    style={{ width: object.size, height: object.size, transitionDuration: "1600ms" }}
+  >
+    <div className="relative w-full h-full">
+      <div
+        className="absolute inset-0 rounded-full opacity-60"
+        style={{
+          background: object.glow,
+          filter: "blur(24px)",
+        }}
+      ></div>
+      <div
+        className="absolute inset-[8%] rounded-full"
+        style={{
+          background: object.ring ?? object.color,
+          boxShadow: "0 6px 0 rgba(0, 0, 0, 0.25)",
+        }}
+      ></div>
+      <div
+        className="absolute inset-[20%] flex items-center justify-center"
+        style={{
+          background: object.color,
+          borderRadius: object.type === "moon" ? "38%" : "9999px",
+          boxShadow: "inset -6px -6px 0 rgba(0, 0, 0, 0.15)",
+        }}
+      >
+        {object.type === "moon" ? (
+          <div className="grid grid-cols-2 gap-1 w-2/3">
+            <span className="block h-3 rounded-sm bg-white/40"></span>
+            <span className="block h-2 rounded-sm bg-white/30"></span>
+            <span className="block h-2 rounded-sm bg-white/30"></span>
+            <span className="block h-3 rounded-sm bg-white/25"></span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-3 gap-1 w-2/3">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <span key={index} className="block h-2 rounded-sm bg-white/30"></span>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+)
+
+const SeasonEffects = ({ season }: { season: SeasonTheme }) => (
+  <div className="pointer-events-none absolute inset-0 z-0">
+    <div
+      className="absolute inset-0 opacity-35 mix-blend-screen"
+      style={{
+        background: `radial-gradient(120% 120% at 50% 0%, ${season.palette.sky}88 0%, transparent 65%)`,
+      }}
+    ></div>
+    <SeasonSkyObjectView object={season.skyObject} />
+    <SeasonOverlay overlay={season.overlay} />
+  </div>
+)
+
+const SeasonIndicator = ({
+  activeSeason,
+  seasons,
+  nextSeason,
+}: {
+  activeSeason: SeasonTheme
+  seasons: SeasonTheme[]
+  nextSeason: SeasonTheme
+}) => (
+  <div
+    className="absolute top-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-md border border-white/30 bg-black/60 px-3 py-2 shadow-lg backdrop-blur-sm sm:left-auto sm:right-6 sm:translate-x-0"
+    style={{ boxShadow: "0 12px 0 rgba(0, 0, 0, 0.35)" }}
+  >
+    <span
+      className="pixel-text text-xs"
+      style={{ color: activeSeason.accentColor }}
+    >
+      {activeSeason.name.toUpperCase()}
+    </span>
+    <div className="flex items-center gap-1">
+      {seasons.map((season) => (
+        <span
+          key={`indicator-${season.id}`}
+          className="block h-2 w-2 rounded-sm border border-white/40 transition-all"
+          style={{
+            background: activeSeason.id === season.id ? season.accentColor : "transparent",
+            opacity: activeSeason.id === season.id ? 1 : 0.25,
+          }}
+        ></span>
+      ))}
+    </div>
+    <span className="hidden text-[10px] text-white/70 sm:inline">
+      NEXT →
+      <span className="ml-1" style={{ color: nextSeason.accentColor }}>
+        {nextSeason.name.toUpperCase()}
+      </span>
+    </span>
+  </div>
+)
 
 export default function Home() {
+  type ProjectCategory = "web" | "ai" | "research"
+  type ProjectAccent = "green" | "blue" | "purple"
+
+  interface Project {
+    id: string
+    title: string
+    subtitle: string
+    description: string
+    longDescription: string
+    image: string
+    accent: ProjectAccent
+    categories: ProjectCategory[]
+    technologies: string[]
+    completionClass: string
+    featured?: boolean
+    highlights?: string[]
+    externalLink?: string
+  }
+
+  const accentStyles: Record<ProjectAccent, {
+    border: string
+    hoverGlow: string
+    title: string
+    badge: string
+    button: string
+    progress: string
+    dialogAccent: string
+  }> = {
+    green: {
+      border: "border-green-500",
+      hoverGlow: "hover-glow-green",
+      title: "text-green-400",
+      badge: "border-green-500 text-green-500",
+      button: "border-green-500 text-green-500 hover:bg-green-500 hover:text-black",
+      progress: "bg-green-500",
+      dialogAccent: "text-green-400",
+    },
+    blue: {
+      border: "border-blue-500",
+      hoverGlow: "hover-glow-blue",
+      title: "text-blue-400",
+      badge: "border-blue-500 text-blue-500",
+      button: "border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white",
+      progress: "bg-blue-500",
+      dialogAccent: "text-blue-400",
+    },
+    purple: {
+      border: "border-purple-500",
+      hoverGlow: "hover-glow-purple",
+      title: "text-purple-400",
+      badge: "border-purple-500 text-purple-500",
+      button: "border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white",
+      progress: "bg-purple-500",
+      dialogAccent: "text-purple-400",
+    },
+  }
+
+  const projectTabs: Array<{ id: "all" | ProjectCategory; label: string }> = [
+    { id: "all", label: "All" },
+    { id: "web", label: "Web Dev" },
+    { id: "ai", label: "AI/ML" },
+    { id: "research", label: "Research" },
+  ]
+
+  const projects: Project[] = [
+    {
+      id: "smartpet",
+      title: "SmartPet+",
+      subtitle: "AI-powered pet breed identification and story generation",
+      description:
+        "A web application that uses machine learning to identify pet breeds from images and automatically generates playful stories about them.",
+      longDescription:
+        "SmartPet+ brings together computer vision and creative AI to help new pet owners learn about their companions in a fun way. I designed the full stack experience — from the Flask backend to the responsive interface — and orchestrated cloud services to keep inference fast and reliable.",
+      image: "/placeholder.svg?height=200&width=400",
+      accent: "green",
+      categories: ["web"],
+      technologies: ["Python", "Flask", "OpenAI", "Azure"],
+      completionClass: "w-full",
+      featured: true,
+      highlights: [
+        "Deployed Azure Computer Vision and GPT models for real-time responses",
+        "Built role-based upload workflow so households can share one login",
+        "Added accessibility-friendly narration for visually impaired owners",
+      ],
+    },
+    {
+      id: "airline-crew",
+      title: "Airline Crew Scheduling",
+      subtitle: "Optimization using Genetic Algorithms",
+      description:
+        "Research project focused on evolving optimal crew rosters to minimize delays and overtime while respecting union constraints.",
+      longDescription:
+        "I modeled the crew scheduling challenge as a combinatorial optimization problem and implemented a custom genetic algorithm to explore feasible rosters. The work benchmarked crossover and mutation strategies, revealing a 17% improvement over greedy baselines on historical airline data.",
+      image: "/placeholder.svg?height=200&width=400",
+      accent: "blue",
+      categories: ["research"],
+      technologies: ["Genetic Algorithms", "Data Analysis", "Optimization"],
+      completionClass: "w-full",
+      highlights: [
+        "Crafted constraint encodings for FAA safety and rest requirements",
+        "Implemented adaptive mutation rates to escape local minima",
+        "Visualized schedule stability metrics for leadership reviews",
+      ],
+    },
+    {
+      id: "smartpet-ai",
+      title: "SmartPet+ AI Model",
+      subtitle: "Machine learning model for pet breed identification",
+      description:
+        "The standalone AI component that processes uploaded photos, predicts the most likely breed, and powers story prompts.",
+      longDescription:
+        "This model distills transfer learning techniques on top of a vision backbone to keep training time modest. I curated a clean dataset, fine-tuned classification layers, and wrapped the result in a lightweight inference API that slots into the primary SmartPet+ application.",
+      image: "/placeholder.svg?height=200&width=400",
+      accent: "purple",
+      categories: ["ai"],
+      technologies: ["Azure Computer Vision", "Machine Learning", "Image Processing"],
+      completionClass: "w-3/4",
+      highlights: [
+        "Achieved 94% top-1 accuracy across 60 common breeds",
+        "Reduced inference latency to under 400ms using model quantization",
+        "Automated evaluation harness using user-provided validation photos",
+      ],
+    },
+  ]
+
+  const [activeProject, setActiveProject] = useState<Project | null>(null)
+  const [seasonIndex, setSeasonIndex] = useState(0)
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSeasonIndex((prev) => (prev + 1) % SEASON_THEMES.length)
+    }, 10000)
+
+    return () => clearInterval(interval)
+  }, [])
+
+  const activeSeason = SEASON_THEMES[seasonIndex]
+  const nextSeason = SEASON_THEMES[(seasonIndex + 1) % SEASON_THEMES.length]
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    window.dispatchEvent(new CustomEvent("seasonChange", { detail: activeSeason }))
+  }, [activeSeason])
+
+  const renderProjectCard = (project: Project) => {
+    const accent = accentStyles[project.accent]
+
+    return (
+      <Card
+        key={project.id}
+        className={`bg-gray-800 border-2 ${accent.border} overflow-hidden hover-animate ${accent.hoverGlow}`}
+      >
+        <div className="h-48 bg-gray-700 relative">
+          <Image
+            src={project.image}
+            alt={project.title}
+            width={400}
+            height={200}
+            className="object-cover w-full h-full"
+          />
+          {project.featured ? (
+            <div className="absolute top-2 right-2">
+              <Badge className="bg-yellow-400 text-black">Featured</Badge>
+            </div>
+          ) : null}
+        </div>
+        <CardHeader>
+          <CardTitle className={`text-xl ${accent.title}`}>{project.title}</CardTitle>
+          <CardDescription>{project.subtitle}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-300 mb-4">{project.description}</p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {project.technologies.map((tech) => (
+              <Badge key={tech} variant="outline" className={accent.badge}>
+                {tech}
+              </Badge>
+            ))}
+          </div>
+          <div className="flex items-center">
+            <span className={`${accent.title} font-bold mr-2`}>COMPLETION:</span>
+            <div className="h-2 bg-gray-700 rounded-full flex-1">
+              <div className={`h-full ${accent.progress} rounded-full ${project.completionClass}`}></div>
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button
+            variant="outline"
+            className={`${accent.button} hover-scale`}
+            onClick={() => setActiveProject(project)}
+          >
+            View Details
+          </Button>
+          {project.externalLink ? (
+            <Button size="icon" variant="ghost" className="hover-scale" asChild>
+              <a
+                href={project.externalLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open ${project.title} in a new tab`}
+              >
+                <ExternalLink className="h-5 w-5" />
+              </a>
+            </Button>
+          ) : (
+            <Button size="icon" variant="ghost" className="hover-scale opacity-60" disabled>
+              <ExternalLink className="h-5 w-5" />
+            </Button>
+          )}
+        </CardFooter>
+      </Card>
+    )
+  }
+
+  const getProjectsForTab = (tab: "all" | ProjectCategory) =>
+    tab === "all" ? projects : projects.filter((project) => project.categories.includes(tab))
+
   return (
-    <div className="flex min-h-screen flex-col text-white [&_p]:text-shadow [&_h1]:text-shadow [&_h2]:text-shadow [&_h3]:text-shadow [&_span]:text-shadow">
-      {/* Pixel art header decoration */}
+    <div className="relative min-h-screen overflow-hidden">
+      <SeasonEffects season={activeSeason} />
+      <SeasonIndicator activeSeason={activeSeason} seasons={SEASON_THEMES} nextSeason={nextSeason} />
+      <div className="relative z-10 flex min-h-screen flex-col text-white [&_p]:text-shadow [&_h1]:text-shadow [&_h2]:text-shadow [&_h3]:text-shadow [&_span]:text-shadow">
+        {/* Pixel art header decoration */}
 
       {/* Navigation */}
       <header className="container mx-auto px-4 py-6 z-10">
@@ -413,292 +960,119 @@ export default function Home() {
           <Tabs defaultValue="all" className="w-full">
             <div className="flex justify-center mb-8">
               <TabsList className="bg-gray-800 p-1">
-                <TabsTrigger value="all" className="data-[state=active]:bg-purple-500 hover-scale">
-                  All
-                </TabsTrigger>
-                <TabsTrigger value="web" className="data-[state=active]:bg-purple-500 hover-scale">
-                  Web Dev
-                </TabsTrigger>
-                <TabsTrigger value="ai" className="data-[state=active]:bg-purple-500 hover-scale">
-                  AI/ML
-                </TabsTrigger>
-                <TabsTrigger value="research" className="data-[state=active]:bg-purple-500 hover-scale">
-                  Research
-                </TabsTrigger>
+                {projectTabs.map((tab) => (
+                  <TabsTrigger key={tab.id} value={tab.id} className="data-[state=active]:bg-purple-500 hover-scale">
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
             </div>
 
-            <TabsContent value="all" className="mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Project 1 */}
-                <Card className="bg-gray-800 border-2 border-green-500 overflow-hidden hover-animate hover-glow-green">
-                  <div className="h-48 bg-gray-700 relative">
-                    <Image
-                      src="/placeholder.svg?height=200&width=400"
-                      alt="SmartPet+"
-                      width={400}
-                      height={200}
-                      className="object-cover w-full h-full"
-                    />
-                    <div className="absolute top-2 right-2">
-                      <Badge className="bg-yellow-400 text-black">Featured</Badge>
-                    </div>
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl text-green-400">SmartPet+</CardTitle>
-                    <CardDescription>AI-powered pet breed identification and story generation</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-300 mb-4">
-                      A web application that uses machine learning to identify pet breeds from images and generates
-                      AI-powered stories about them.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="outline" className="border-green-500 text-green-500">
-                        Python
-                      </Badge>
-                      <Badge variant="outline" className="border-green-500 text-green-500">
-                        Flask
-                      </Badge>
-                      <Badge variant="outline" className="border-green-500 text-green-500">
-                        OpenAI
-                      </Badge>
-                      <Badge variant="outline" className="border-green-500 text-green-500">
-                        Azure
-                      </Badge>
-                    </div>
-                    <div className="flex items-center">
-                      <span className="text-green-400 font-bold mr-2">COMPLETION:</span>
-                      <div className="h-2 bg-gray-700 rounded-full flex-1">
-                        <div className="h-full bg-green-500 rounded-full w-full"></div>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      className="border-green-500 text-green-500 hover:bg-green-500 hover:text-black hover-scale"
-                    >
-                      View Details
-                    </Button>
-                    <Button size="icon" variant="ghost" className="hover-scale">
-                      <ExternalLink className="h-5 w-5" />
-                    </Button>
-                  </CardFooter>
-                </Card>
+            {projectTabs.map((tab) => {
+              const tabProjects = getProjectsForTab(tab.id)
+              const emptyMessage =
+                tab.id === "all"
+                  ? "New projects are on the way — check back soon for fresh builds."
+                  : `More ${tab.label.toLowerCase()} projects coming soon.`
 
-                {/* Project 2 */}
-                <Card className="bg-gray-800 border-2 border-blue-500 overflow-hidden hover-animate hover-glow-blue">
-                  <div className="h-48 bg-gray-700 relative">
-                    <Image
-                      src="/placeholder.svg?height=200&width=400"
-                      alt="Airline Crew Scheduling"
-                      width={400}
-                      height={200}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl text-blue-400">Airline Crew Scheduling</CardTitle>
-                    <CardDescription>Optimization using Genetic Algorithms</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-300 mb-4">
-                      Research project on optimizing airline crew scheduling by applying genetic and evolutionary
-                      algorithms to improve efficiency.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="outline" className="border-blue-500 text-blue-500">
-                        Genetic Algorithms
-                      </Badge>
-                      <Badge variant="outline" className="border-blue-500 text-blue-500">
-                        Data Analysis
-                      </Badge>
-                      <Badge variant="outline" className="border-blue-500 text-blue-500">
-                        Optimization
-                      </Badge>
+              return (
+                <TabsContent key={tab.id} value={tab.id} className="mt-0">
+                  {tabProjects.length ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {tabProjects.map((project) => renderProjectCard(project))}
                     </div>
-                    <div className="flex items-center">
-                      <span className="text-blue-400 font-bold mr-2">COMPLETION:</span>
-                      <div className="h-2 bg-gray-700 rounded-full flex-1">
-                        <div className="h-full bg-blue-500 rounded-full w-full"></div>
-                      </div>
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-purple-500/60 bg-gray-900/60 p-8 text-center text-gray-300">
+                      {emptyMessage}
                     </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white hover-scale"
-                    >
-                      View Details
-                    </Button>
-                    <Button size="icon" variant="ghost" className="hover-scale">
-                      <ExternalLink className="h-5 w-5" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="web" className="mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Web Projects would go here */}
-                <Card className="bg-gray-800 border-2 border-green-500 overflow-hidden hover-animate hover-glow-green">
-                  <div className="h-48 bg-gray-700 relative">
-                    <Image
-                      src="/placeholder.svg?height=200&width=400"
-                      alt="SmartPet+"
-                      width={400}
-                      height={200}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl text-green-400">SmartPet+</CardTitle>
-                    <CardDescription>AI-powered pet breed identification and story generation</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-300 mb-4">
-                      A web application that uses machine learning to identify pet breeds from images and generates
-                      AI-powered stories about them.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="outline" className="border-green-500 text-green-500">
-                        Python
-                      </Badge>
-                      <Badge variant="outline" className="border-green-500 text-green-500">
-                        Flask
-                      </Badge>
-                      <Badge variant="outline" className="border-green-500 text-green-500">
-                        OpenAI
-                      </Badge>
-                      <Badge variant="outline" className="border-green-500 text-green-500">
-                        Azure
-                      </Badge>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      className="border-green-500 text-green-500 hover:bg-green-500 hover:text-black hover-scale"
-                    >
-                      View Details
-                    </Button>
-                    <Button size="icon" variant="ghost" className="hover-scale">
-                      <ExternalLink className="h-5 w-5" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="ai" className="mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* AI Projects would go here */}
-                <Card className="bg-gray-800 border-2 border-purple-500 overflow-hidden hover-animate hover-glow-purple">
-                  <div className="h-48 bg-gray-700 relative">
-                    <Image
-                      src="/placeholder.svg?height=200&width=400"
-                      alt="AI Project"
-                      width={400}
-                      height={200}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl text-purple-400">SmartPet+ AI Model</CardTitle>
-                    <CardDescription>Machine learning model for pet breed identification</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-300 mb-4">
-                      The AI component of SmartPet+ that uses computer vision to accurately identify pet breeds from
-                      uploaded images.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="outline" className="border-purple-500 text-purple-500">
-                        Azure Computer Vision
-                      </Badge>
-                      <Badge variant="outline" className="border-purple-500 text-purple-500">
-                        Machine Learning
-                      </Badge>
-                      <Badge variant="outline" className="border-purple-500 text-purple-500">
-                        Image Processing
-                      </Badge>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      className="border-purple-500 text-purple-500 hover:bg-purple-500 hover:text-white hover-scale"
-                    >
-                      View Details
-                    </Button>
-                    <Button size="icon" variant="ghost" className="hover-scale">
-                      <ExternalLink className="h-5 w-5" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="research" className="mt-0">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                {/* Research Projects would go here */}
-                <Card className="bg-gray-800 border-2 border-blue-500 overflow-hidden hover-animate hover-glow-blue">
-                  <div className="h-48 bg-gray-700 relative">
-                    <Image
-                      src="/placeholder.svg?height=200&width=400"
-                      alt="Airline Crew Scheduling"
-                      width={400}
-                      height={200}
-                      className="object-cover w-full h-full"
-                    />
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-xl text-blue-400">Airline Crew Scheduling</CardTitle>
-                    <CardDescription>Optimization using Genetic Algorithms</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-300 mb-4">
-                      Research project on optimizing airline crew scheduling by applying genetic and evolutionary
-                      algorithms to improve efficiency.
-                    </p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      <Badge variant="outline" className="border-blue-500 text-blue-500">
-                        Genetic Algorithms
-                      </Badge>
-                      <Badge variant="outline" className="border-blue-500 text-blue-500">
-                        Data Analysis
-                      </Badge>
-                      <Badge variant="outline" className="border-blue-500 text-blue-500">
-                        Optimization
-                      </Badge>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button
-                      variant="outline"
-                      className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white hover-scale"
-                    >
-                      View Details
-                    </Button>
-                    <Button size="icon" variant="ghost" className="hover-scale">
-                      <ExternalLink className="h-5 w-5" />
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </div>
-            </TabsContent>
+                  )}
+                </TabsContent>
+              )
+            })}
           </Tabs>
 
           <div className="mt-12 text-center">
             <Button asChild className="bg-purple-500 hover:bg-purple-600 text-white font-bold px-8 py-6 text-lg rounded-none border-b-4 border-purple-700 hover:translate-y-1 transition-transform hover-scale">
-              <a href="#projects" target="_blank" rel="noopener noreferrer">
+              <a href="#projects">
                 VIEW ALL PROJECTS <ArrowRight className="ml-2" />
               </a>
             </Button>
           </div>
         </div>
+
+        <Dialog open={Boolean(activeProject)} onOpenChange={(open) => (!open ? setActiveProject(null) : undefined)}>
+          <DialogContent className="max-w-3xl border border-purple-500 bg-gray-900 text-white">
+            {activeProject ? (
+              <div className="space-y-6">
+                <DialogHeader>
+                  <DialogTitle className={`text-3xl font-bold ${accentStyles[activeProject.accent].dialogAccent}`}>
+                    {activeProject.title}
+                  </DialogTitle>
+                  <DialogDescription className="text-gray-300">
+                    {activeProject.subtitle}
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="relative h-48 w-full overflow-hidden rounded-md border border-gray-800">
+                  <Image
+                    src={activeProject.image}
+                    alt={activeProject.title}
+                    width={800}
+                    height={320}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
+
+                <p className="text-gray-200 leading-relaxed">{activeProject.longDescription}</p>
+
+                {activeProject.highlights ? (
+                  <div>
+                    <h4 className="mb-3 text-lg font-semibold text-purple-300">Highlights</h4>
+                    <ul className="list-disc space-y-2 pl-5 text-gray-300">
+                      {activeProject.highlights.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
+
+                <div>
+                  <h4 className="mb-3 text-lg font-semibold text-purple-300">Tech Stack</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {activeProject.technologies.map((tech) => (
+                      <Badge key={tech} variant="outline" className={accentStyles[activeProject.accent].badge}>
+                        {tech}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 border-t border-gray-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                  {activeProject.externalLink ? (
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="border-purple-500 text-purple-300 hover:bg-purple-500 hover:text-white hover-scale"
+                    >
+                      <a href={activeProject.externalLink} target="_blank" rel="noopener noreferrer">
+                        Open Project <ExternalLink className="ml-2 h-4 w-4" />
+                      </a>
+                    </Button>
+                  ) : (
+                    <span className="text-sm text-gray-500">Project link coming soon.</span>
+                  )}
+
+                  <Button
+                    onClick={() => setActiveProject(null)}
+                    className="bg-purple-500 text-white hover:bg-purple-600 hover-scale"
+                  >
+                    Back to Portfolio
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </DialogContent>
+        </Dialog>
       </section>
 
       {/* Track & Field Achievements */}
@@ -1239,5 +1613,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+  </div>
   )
 }
