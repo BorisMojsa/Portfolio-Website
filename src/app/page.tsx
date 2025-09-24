@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
+import type { PointerEvent as ReactPointerEvent, RefObject } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { ArrowRight, Medal, Trophy, Mail, ExternalLink, Cpu, BookOpen, Award } from "lucide-react"
@@ -9,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { cn } from "@/lib/utils"
 
 type SeasonId = "summer" | "fall" | "winter" | "spring"
 type SeasonOverlayType = "rain" | "snow" | "leaves" | "petals"
@@ -51,17 +53,17 @@ interface SeasonTheme {
 }
 
 const OVERLAY_POSITIONS: Record<SeasonOverlayType, Array<{ left: string; delay: string; duration: string; scale: number }>> = {
-  rain: Array.from({ length: 36 }, (_, index) => ({
+  rain: Array.from({ length: 48 }, (_, index) => ({
     left: `${(index * 2.7) % 100}%`,
     delay: `${(index % 12) * 0.2}s`,
     duration: `${2.4 + (index % 6) * 0.2}s`,
-    scale: 0.8 + ((index % 3) * 0.2),
+    scale: 1 + (index % 3) * 0.25,
   })),
-  snow: Array.from({ length: 32 }, (_, index) => ({
+  snow: Array.from({ length: 48 }, (_, index) => ({
     left: `${(index * 3.4) % 100}%`,
     delay: `${(index % 10) * 0.35}s`,
     duration: `${5 + (index % 5)}s`,
-    scale: 0.6 + ((index % 4) * 0.15),
+    scale: 0.9 + (index % 4) * 0.2,
   })),
   leaves: Array.from({ length: 28 }, (_, index) => ({
     left: `${(index * 4.1) % 100}%`,
@@ -293,26 +295,31 @@ const SeasonIndicator = ({
   activeSeason,
   seasons,
   nextSeason,
+  className,
 }: {
   activeSeason: SeasonTheme
   seasons: SeasonTheme[]
   nextSeason: SeasonTheme
+  className?: string
 }) => (
   <div
-    className="absolute top-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-md border border-white/30 bg-black/60 px-3 py-2 shadow-lg backdrop-blur-sm sm:left-auto sm:right-6 sm:translate-x-0"
-    style={{ boxShadow: "0 12px 0 rgba(0, 0, 0, 0.35)" }}
+    className={cn(
+      "z-20 flex items-center gap-2 rounded-lg border border-white/25 bg-slate-900/70 px-2.5 py-1.5 text-[13px] shadow-md backdrop-blur-sm",
+      className,
+    )}
+    style={{ boxShadow: "0 10px 0 rgba(0, 0, 0, 0.25)" }}
   >
     <span
-      className="pixel-text text-xs"
+      className="pixel-text text-[11px]"
       style={{ color: activeSeason.accentColor }}
     >
       {activeSeason.name.toUpperCase()}
     </span>
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1.5">
       {seasons.map((season) => (
         <span
           key={`indicator-${season.id}`}
-          className="block h-2 w-2 rounded-sm border border-white/40 transition-all"
+          className="block h-1.5 w-1.5 rounded-sm border border-white/40 transition-all"
           style={{
             background: activeSeason.id === season.id ? season.accentColor : "transparent",
             opacity: activeSeason.id === season.id ? 1 : 0.25,
@@ -320,7 +327,7 @@ const SeasonIndicator = ({
         ></span>
       ))}
     </div>
-    <span className="hidden text-[10px] text-white/70 sm:inline">
+    <span className="hidden text-[9px] text-white/70 sm:inline">
       NEXT →
       <span className="ml-1" style={{ color: nextSeason.accentColor }}>
         {nextSeason.name.toUpperCase()}
@@ -328,6 +335,214 @@ const SeasonIndicator = ({
     </span>
   </div>
 )
+
+const clamp = (value: number, min: number, max: number) => {
+  const upperBound = Math.max(min, max)
+  return Math.min(Math.max(value, min), upperBound)
+}
+
+type IndicatorBounds = {
+  minX: number
+  maxX: number
+  minY: number
+  maxY: number
+}
+
+const DraggableSeasonIndicator = ({
+  activeSeason,
+  seasons,
+  nextSeason,
+  anchorRef,
+}: {
+  activeSeason: SeasonTheme
+  seasons: SeasonTheme[]
+  nextSeason: SeasonTheme
+  anchorRef?: RefObject<HTMLElement>
+}) => {
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const handleRef = useRef<HTMLButtonElement | null>(null)
+  const pointerOffset = useRef({ x: 0, y: 0 })
+  const [position, setPosition] = useState<{ x: number; y: number }>({ x: 32, y: 32 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [hasLockedPosition, setHasLockedPosition] = useState(false)
+  const [isHidden, setIsHidden] = useState(false)
+
+  const handleVisibility = useCallback(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const container = containerRef.current
+    const aboutSection = document.getElementById("about")
+
+    if (!container || !aboutSection) {
+      setIsHidden(false)
+      return
+    }
+
+    const indicatorRect = container.getBoundingClientRect()
+    const aboutRect = aboutSection.getBoundingClientRect()
+    const fadeBuffer = 32
+
+    setIsHidden(aboutRect.top <= indicatorRect.bottom + fadeBuffer)
+  }, [])
+
+  const getBounds = useCallback((): IndicatorBounds => {
+    const horizontalMargin = 12
+    const verticalMargin = 12
+
+    if (typeof window === "undefined") {
+      return {
+        minX: horizontalMargin,
+        maxX: horizontalMargin,
+        minY: verticalMargin,
+        maxY: verticalMargin,
+      }
+    }
+
+    const container = containerRef.current
+    const width = container?.offsetWidth ?? 0
+    const height = container?.offsetHeight ?? 0
+
+    const minX = horizontalMargin
+    const minY = verticalMargin
+    const viewportMaxX = Math.max(minX, window.innerWidth - width - horizontalMargin)
+    const viewportMaxY = Math.max(minY, window.innerHeight - height - verticalMargin)
+
+    return {
+      minX,
+      maxX: viewportMaxX,
+      minY,
+      maxY: viewportMaxY,
+    }
+  }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    if (hasLockedPosition) {
+      return
+    }
+
+    const anchor = anchorRef?.current
+    const container = containerRef.current
+
+    if (!anchor || !container) {
+      return
+    }
+
+    const rect = anchor.getBoundingClientRect()
+    const bounds = getBounds()
+    const containerHeight = container.offsetHeight
+
+    const targetX = clamp(rect.right + 16, bounds.minX, bounds.maxX)
+    const baseY =
+      containerHeight > 0
+        ? rect.top + rect.height / 2 - containerHeight / 2
+        : rect.top
+    const targetY = clamp(baseY, bounds.minY, bounds.maxY)
+
+    setPosition({ x: targetX, y: targetY })
+    setHasLockedPosition(true)
+
+    requestAnimationFrame(handleVisibility)
+  }, [anchorRef, getBounds, hasLockedPosition, handleVisibility])
+
+  const startDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!containerRef.current) {
+      return
+    }
+
+    event.preventDefault()
+    const rect = containerRef.current.getBoundingClientRect()
+    pointerOffset.current = {
+      x: event.clientX - rect.left,
+      y: event.clientY - rect.top,
+    }
+
+    setIsHidden(false)
+    setIsDragging(true)
+    setHasLockedPosition(true)
+    handleRef.current?.setPointerCapture(event.pointerId)
+  }
+
+  const onDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!isDragging || typeof window === "undefined") {
+      return
+    }
+
+    event.preventDefault()
+    const bounds = getBounds()
+    setPosition({
+      x: clamp(event.clientX - pointerOffset.current.x, bounds.minX, bounds.maxX),
+      y: clamp(event.clientY - pointerOffset.current.y, bounds.minY, bounds.maxY),
+    })
+    requestAnimationFrame(handleVisibility)
+  }
+
+  const stopDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (!isDragging) {
+      return
+    }
+
+    event.preventDefault()
+    setIsDragging(false)
+    handleRef.current?.releasePointerCapture(event.pointerId)
+    requestAnimationFrame(handleVisibility)
+  }
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    handleVisibility()
+
+    window.addEventListener("scroll", handleVisibility, { passive: true })
+    window.addEventListener("resize", handleVisibility)
+
+    return () => {
+      window.removeEventListener("scroll", handleVisibility)
+      window.removeEventListener("resize", handleVisibility)
+    }
+  }, [handleVisibility])
+
+  return (
+    <div
+      ref={containerRef}
+      className={cn(
+        "hidden sm:flex fixed z-30 flex-col items-center select-none transition-all duration-200 ease-out",
+        isDragging ? "cursor-grabbing" : "cursor-default",
+        isHidden ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100",
+      )}
+      style={{ top: `${position.y}px`, left: `${position.x}px` }}
+    >
+      <SeasonIndicator activeSeason={activeSeason} seasons={seasons} nextSeason={nextSeason} />
+      <button
+        ref={handleRef}
+        type="button"
+        aria-label="Drag season indicator"
+        onPointerDown={startDrag}
+        onPointerMove={onDrag}
+        onPointerUp={stopDrag}
+        onPointerCancel={stopDrag}
+        className={cn(
+          "relative mt-2 block h-3 -translate-x-1/2 transform rounded-full bg-white/20 backdrop-blur-sm transition-colors touch-none focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60",
+          isDragging ? "cursor-grabbing" : "cursor-grab hover:bg-white/30",
+        )}
+        style={{
+          left: "50%",
+          width: "calc(100% + 18px)",
+          boxShadow: "0 6px 14px rgba(0, 0, 0, 0.3)",
+        }}
+      >
+        <span className="sr-only">Drag season indicator</span>
+      </button>
+    </div>
+  )
+}
 
 export default function Home() {
   type ProjectCategory = "web" | "ai" | "research"
@@ -457,6 +672,7 @@ export default function Home() {
 
   const [activeProject, setActiveProject] = useState<Project | null>(null)
   const [seasonIndex, setSeasonIndex] = useState(0)
+  const borisLinkRef = useRef<HTMLAnchorElement | null>(null)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -554,14 +770,23 @@ export default function Home() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <SeasonEffects season={activeSeason} />
-      <SeasonIndicator activeSeason={activeSeason} seasons={SEASON_THEMES} nextSeason={nextSeason} />
+      <DraggableSeasonIndicator
+        activeSeason={activeSeason}
+        seasons={SEASON_THEMES}
+        nextSeason={nextSeason}
+        anchorRef={borisLinkRef}
+      />
       <div className="relative z-10 flex min-h-screen flex-col text-white [&_p]:text-shadow [&_h1]:text-shadow [&_h2]:text-shadow [&_h3]:text-shadow [&_span]:text-shadow">
         {/* Pixel art header decoration */}
 
       {/* Navigation */}
       <header className="container mx-auto px-4 py-6 z-10">
         <nav className="flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold tracking-tighter pixel-text">
+          <Link
+            ref={borisLinkRef}
+            href="/"
+            className="text-2xl font-bold tracking-tighter pixel-text"
+          >
             BORIS_MOJSA
           </Link>
           <div className="hidden md:flex items-center space-x-6">
@@ -602,6 +827,12 @@ export default function Home() {
             </svg>
           </Button>
         </nav>
+        <SeasonIndicator
+          activeSeason={activeSeason}
+          seasons={SEASON_THEMES}
+          nextSeason={nextSeason}
+          className="mt-4 w-full max-w-xs mx-auto sm:hidden"
+        />
       </header>
 
       {/* Hero Section */}
@@ -666,8 +897,10 @@ export default function Home() {
         <div className="flex flex-col md:flex-row gap-12 items-center">
           <div className="md:w-1/2">
             <h2 className="text-4xl font-bold mb-6 pixel-text text-green-400">ABOUT ME</h2>
-            <div className="space-y-4 text-lg">
-              <p>
+            <div className="relative">
+              <div className="absolute -inset-3 rounded-3xl bg-slate-900/55 backdrop-blur-md border border-white/15 shadow-lg"></div>
+              <div className="relative space-y-4 rounded-2xl border border-white/10 bg-white/6 px-6 py-6 text-lg shadow-inner">
+                <p>
                 Hello! I'm Boris Mojsa, a Computer Science student at Chicago State University with a minor in
                 Mathematics. I'm passionate about technology and track & field, bringing the same discipline and
                 determination to both arenas.
@@ -681,6 +914,7 @@ export default function Home() {
                 I'm dedicated to using my technical skills to create innovative solutions that make a positive impact,
                 whether through community-focused digital literacy initiatives or cutting-edge research projects.
               </p>
+            </div>
             </div>
             <div className="mt-8 flex flex-wrap gap-2">
               <Badge className="bg-red-500 hover:bg-red-600">Problem Solver</Badge>
