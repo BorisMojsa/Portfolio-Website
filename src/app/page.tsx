@@ -4,12 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import type { PointerEvent as ReactPointerEvent, RefObject } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ArrowRight, Medal, Trophy, Mail, ExternalLink, Cpu, BookOpen, Award } from "lucide-react"
+import { ArrowRight, Medal, Trophy, Mail, ExternalLink, Cpu, BookOpen, Award, Linkedin, Github, ArrowUp, Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { cn } from "@/lib/utils"
 
 type SeasonId = "summer" | "fall" | "winter" | "spring"
@@ -301,40 +300,52 @@ const SeasonIndicator = ({
   seasons: SeasonTheme[]
   nextSeason: SeasonTheme
   className?: string
-}) => (
-  <div
-    className={cn(
-      "z-20 flex items-center gap-2 rounded-lg border border-white/25 bg-slate-900/70 px-2.5 py-1.5 text-[13px] shadow-md backdrop-blur-sm",
-      className,
-    )}
-    style={{ boxShadow: "0 10px 0 rgba(0, 0, 0, 0.25)" }}
-  >
+}) => {
+  // Convert hex to rgba with transparency
+  const hexToRgba = (hex: string, alpha: number) => {
+    const r = parseInt(hex.slice(1, 3), 16)
+    const g = parseInt(hex.slice(3, 5), 16)
+    const b = parseInt(hex.slice(5, 7), 16)
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`
+  }
+
+  return (
+    <div
+      className={cn(
+        "z-20 flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm shadow-md backdrop-blur-md",
+        className,
+      )}
+      style={{ 
+        backgroundColor: hexToRgba(activeSeason.accentColor, 0.4),
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)"
+      }}
+    >
     <span
-      className="pixel-text text-[11px]"
-      style={{ color: activeSeason.accentColor }}
+      className="pixel-text text-xs font-bold text-white"
+      style={{ textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)" }}
     >
       {activeSeason.name.toUpperCase()}
     </span>
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1">
       {seasons.map((season) => (
         <span
           key={`indicator-${season.id}`}
-          className="block h-1.5 w-1.5 rounded-sm border border-white/40 transition-all"
+          className="block h-1.5 w-1.5 rounded-full transition-all"
           style={{
-            background: activeSeason.id === season.id ? season.accentColor : "transparent",
-            opacity: activeSeason.id === season.id ? 1 : 0.25,
+            backgroundColor: activeSeason.id === season.id ? season.accentColor : "rgba(255, 255, 255, 0.4)",
           }}
         ></span>
       ))}
     </div>
-    <span className="hidden text-[9px] text-white/70 sm:inline">
+    <span className="text-xs text-white sm:inline" style={{ textShadow: "1px 1px 2px rgba(0, 0, 0, 0.5)" }}>
       NEXT →
-      <span className="ml-1" style={{ color: nextSeason.accentColor }}>
+      <span className="ml-1 font-bold" style={{ color: nextSeason.accentColor }}>
         {nextSeason.name.toUpperCase()}
       </span>
     </span>
   </div>
-)
+  )
+}
 
 const clamp = (value: number, min: number, max: number) => {
   const upperBound = Math.max(min, max)
@@ -365,27 +376,7 @@ const DraggableSeasonIndicator = ({
   const [position, setPosition] = useState<{ x: number; y: number }>({ x: 32, y: 32 })
   const [isDragging, setIsDragging] = useState(false)
   const [hasLockedPosition, setHasLockedPosition] = useState(false)
-  const [isHidden, setIsHidden] = useState(false)
-
-  const handleVisibility = useCallback(() => {
-    if (typeof window === "undefined") {
-      return
-    }
-
-    const container = containerRef.current
-    const aboutSection = document.getElementById("about")
-
-    if (!container || !aboutSection) {
-      setIsHidden(false)
-      return
-    }
-
-    const indicatorRect = container.getBoundingClientRect()
-    const aboutRect = aboutSection.getBoundingClientRect()
-    const fadeBuffer = 32
-
-    setIsHidden(aboutRect.top <= indicatorRect.bottom + fadeBuffer)
-  }, [])
+  const [lastDragPosition, setLastDragPosition] = useState<{ x: number; y: number } | null>(null)
 
   const getBounds = useCallback((): IndicatorBounds => {
     const horizontalMargin = 12
@@ -406,8 +397,20 @@ const DraggableSeasonIndicator = ({
 
     const minX = horizontalMargin
     const minY = verticalMargin
-    const viewportMaxX = Math.max(minX, window.innerWidth - width - horizontalMargin)
-    const viewportMaxY = Math.max(minY, window.innerHeight - height - verticalMargin)
+
+    const docWidth = Math.max(document.documentElement.scrollWidth, window.innerWidth)
+    const docHeight = Math.max(document.documentElement.scrollHeight, window.innerHeight)
+
+    const viewportMaxX = Math.max(minX, docWidth - width - horizontalMargin)
+    let viewportMaxY = Math.max(minY, docHeight - height - verticalMargin)
+
+    const aboutSection = document.getElementById("about")
+    if (aboutSection) {
+      const aboutRect = aboutSection.getBoundingClientRect()
+      const aboutTop = aboutRect.top + window.scrollY
+      const maxAllowed = aboutTop - height - 24
+      viewportMaxY = Math.min(viewportMaxY, Math.max(minY, maxAllowed))
+    }
 
     return {
       minX,
@@ -437,18 +440,18 @@ const DraggableSeasonIndicator = ({
     const bounds = getBounds()
     const containerHeight = container.offsetHeight
 
-    const targetX = clamp(rect.right + 16, bounds.minX, bounds.maxX)
+    const targetX = clamp(rect.right + window.scrollX + 16, bounds.minX, bounds.maxX)
     const baseY =
       containerHeight > 0
-        ? rect.top + rect.height / 2 - containerHeight / 2
-        : rect.top
+        ? rect.top + window.scrollY + rect.height / 2 - containerHeight / 2
+        : rect.top + window.scrollY
     const targetY = clamp(baseY, bounds.minY, bounds.maxY)
 
-    setPosition({ x: targetX, y: targetY })
+    const lockedPosition = { x: targetX, y: targetY }
+    setPosition(lockedPosition)
+    setLastDragPosition(lockedPosition)
     setHasLockedPosition(true)
-
-    requestAnimationFrame(handleVisibility)
-  }, [anchorRef, getBounds, hasLockedPosition, handleVisibility])
+  }, [anchorRef, getBounds, hasLockedPosition])
 
   const startDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (!containerRef.current) {
@@ -462,9 +465,9 @@ const DraggableSeasonIndicator = ({
       y: event.clientY - rect.top,
     }
 
-    setIsHidden(false)
     setIsDragging(true)
     setHasLockedPosition(true)
+    setLastDragPosition(position)
     handleRef.current?.setPointerCapture(event.pointerId)
   }
 
@@ -475,11 +478,12 @@ const DraggableSeasonIndicator = ({
 
     event.preventDefault()
     const bounds = getBounds()
-    setPosition({
-      x: clamp(event.clientX - pointerOffset.current.x, bounds.minX, bounds.maxX),
-      y: clamp(event.clientY - pointerOffset.current.y, bounds.minY, bounds.maxY),
-    })
-    requestAnimationFrame(handleVisibility)
+    const nextPosition = {
+      x: clamp(event.clientX + window.scrollX - pointerOffset.current.x, bounds.minX, bounds.maxX),
+      y: clamp(event.clientY + window.scrollY - pointerOffset.current.y, bounds.minY, bounds.maxY),
+    }
+    setPosition(nextPosition)
+    setLastDragPosition(nextPosition)
   }
 
   const stopDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
@@ -490,32 +494,17 @@ const DraggableSeasonIndicator = ({
     event.preventDefault()
     setIsDragging(false)
     handleRef.current?.releasePointerCapture(event.pointerId)
-    requestAnimationFrame(handleVisibility)
+    if (lastDragPosition) {
+      setPosition(lastDragPosition)
+    }
   }
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return
-    }
-
-    handleVisibility()
-
-    window.addEventListener("scroll", handleVisibility, { passive: true })
-    window.addEventListener("resize", handleVisibility)
-
-    return () => {
-      window.removeEventListener("scroll", handleVisibility)
-      window.removeEventListener("resize", handleVisibility)
-    }
-  }, [handleVisibility])
 
   return (
     <div
       ref={containerRef}
       className={cn(
-        "hidden sm:flex fixed z-30 flex-col items-center select-none transition-all duration-200 ease-out",
+        "hidden sm:flex absolute z-30 flex-col items-center select-none transition-all duration-200 ease-out",
         isDragging ? "cursor-grabbing" : "cursor-default",
-        isHidden ? "pointer-events-none opacity-0" : "pointer-events-auto opacity-100",
       )}
       style={{ top: `${position.y}px`, left: `${position.x}px` }}
     >
@@ -615,19 +604,19 @@ export default function Home() {
       title: "SmartPet+",
       subtitle: "AI-powered pet breed identification and story generation",
       description:
-        "A web application that uses machine learning to identify pet breeds from images and automatically generates playful stories about them.",
+        "Real-time Flask web app that classifies pet breeds with Azure Vision and spins up GPT-powered care stories instantly.",
       longDescription:
-        "SmartPet+ brings together computer vision and creative AI to help new pet owners learn about their companions in a fun way. I designed the full stack experience — from the Flask backend to the responsive interface — and orchestrated cloud services to keep inference fast and reliable.",
-      image: "/placeholder.svg?height=200&width=400",
+        "SmartPet+ orchestrates Azure Computer Vision, Flask, and OpenAI GPT-4o mini to help new owners understand their pets. I engineered the inference pipeline, tuned datasets for consistent breed detection, and choreographed prompt flows that return playful narratives and care routines in seconds.",
+      image: "/images/smartpet.png",
       accent: "green",
       categories: ["web"],
-      technologies: ["Python", "Flask", "OpenAI", "Azure"],
+      technologies: ["Python", "Flask", "OpenAI", "Azure", "REST APIs"],
       completionClass: "w-full",
       featured: true,
       highlights: [
-        "Deployed Azure Computer Vision and GPT models for real-time responses",
-        "Built role-based upload workflow so households can share one login",
-        "Added accessibility-friendly narration for visually impaired owners",
+        "Conducted dataset tuning and transfer learning to improve top-1 accuracy across 60+ breeds.",
+        "Integrated OpenAI GPT-4o mini to auto-generate personalized care tips and story beats per pet.",
+        "Deployed responsive UI and REST endpoints that keep upload-to-story latency under one second.",
       ],
     },
     {
@@ -635,43 +624,43 @@ export default function Home() {
       title: "Airline Crew Scheduling",
       subtitle: "Optimization using Genetic Algorithms",
       description:
-        "Research project focused on evolving optimal crew rosters to minimize delays and overtime while respecting union constraints.",
+        "Academic research using evolutionary strategies to reduce crew scheduling conflicts and operating costs.",
       longDescription:
-        "I modeled the crew scheduling challenge as a combinatorial optimization problem and implemented a custom genetic algorithm to explore feasible rosters. The work benchmarked crossover and mutation strategies, revealing a 17% improvement over greedy baselines on historical airline data.",
-      image: "/placeholder.svg?height=200&width=400",
+        "I modeled the crew scheduling challenge as a combinatorial optimization problem and implemented custom genetic algorithm operators to search valid rosters. The work benchmarked crossover and mutation strategies, surfaced 17% efficiency gains over greedy baselines, and visualized staffing stability for airline leadership review.",
+      image: "/images/airline-crew.png",
       accent: "blue",
       categories: ["research"],
-      technologies: ["Genetic Algorithms", "Data Analysis", "Optimization"],
+      technologies: ["Genetic Algorithms", "Python", "Data Analysis", "Optimization"],
       completionClass: "w-full",
       highlights: [
-        "Crafted constraint encodings for FAA safety and rest requirements",
-        "Implemented adaptive mutation rates to escape local minima",
-        "Visualized schedule stability metrics for leadership reviews",
+        "Encoded FAA safety and rest regulations directly into chromosome fitness scoring.",
+        "Tested adaptive mutation rates that unlocked faster convergence on feasible rosters.",
+        "Built dashboards showcasing crew utilization, overtime reduction, and on-time performance.",
       ],
     },
     {
-      id: "smartpet-ai",
-      title: "SmartPet+ AI Model",
-      subtitle: "Machine learning model for pet breed identification",
+      id: "portfolio",
+      title: "Terminal-Style Portfolio",
+      subtitle: "Retro-inspired interactive personal website",
       description:
-        "The standalone AI component that processes uploaded photos, predicts the most likely breed, and powers story prompts.",
+        "CLI-themed portfolio built with Next.js and TypeScript that spotlights projects with pixel art animations and command prompts.",
       longDescription:
-        "This model distills transfer learning techniques on top of a vision backbone to keep training time modest. I curated a clean dataset, fine-tuned classification layers, and wrapped the result in a lightweight inference API that slots into the primary SmartPet+ application.",
-      image: "/placeholder.svg?height=200&width=400",
+        "I designed and coded my personal portfolio from scratch, leaning into a retro arcade aesthetic with terminal-inspired navigation. The build uses Next.js App Router, Zustand-driven interactions, and custom shaders to animate pixel art environments that change with the season. The experience doubles as a sandbox for experimenting with AI-assisted content pipelines and accessibility best practices.",
+      image: "/images/terminalportfolio.png",
       accent: "purple",
-      categories: ["ai"],
-      technologies: ["Azure Computer Vision", "Machine Learning", "Image Processing"],
-      completionClass: "w-3/4",
+      categories: ["web"],
+      technologies: ["Next.js", "TypeScript", "Tailwind CSS", "Shadcn UI"],
+      completionClass: "w-[90%]",
       highlights: [
-        "Achieved 94% top-1 accuracy across 60 common breeds",
-        "Reduced inference latency to under 400ms using model quantization",
-        "Automated evaluation harness using user-provided validation photos",
+        "Crafted pixel-perfect animations and CLI prompts that reinforce the retro game narrative.",
+        "Implemented responsive motion controls and dialog components for accessible interactivity.",
+        "Set up AI-assisted content pipelines to keep project data, resume insights, and achievements in sync.",
       ],
     },
   ]
 
-  const [activeProject, setActiveProject] = useState<Project | null>(null)
   const [seasonIndex, setSeasonIndex] = useState(0)
+  const [showScrollTop, setShowScrollTop] = useState(false)
   const borisLinkRef = useRef<HTMLAnchorElement | null>(null)
 
   useEffect(() => {
@@ -693,74 +682,114 @@ export default function Home() {
     window.dispatchEvent(new CustomEvent("seasonChange", { detail: activeSeason }))
   }, [activeSeason])
 
+  // Handle scroll to top button visibility
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400)
+    }
+
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    })
+  }
+
   const renderProjectCard = (project: Project) => {
     const accent = accentStyles[project.accent]
 
     return (
-      <Card
+      <Link
         key={project.id}
-        className={`bg-gray-800 border-2 ${accent.border} overflow-hidden hover-animate ${accent.hoverGlow}`}
+        href={`/projects/${project.id}`}
+        className="block"
       >
-        <div className="h-48 bg-gray-700 relative">
-          <Image
-            src={project.image}
-            alt={project.title}
-            width={400}
-            height={200}
-            className="object-cover w-full h-full"
-          />
-          {project.featured ? (
-            <div className="absolute top-2 right-2">
-              <Badge className="bg-yellow-400 text-black">Featured</Badge>
-            </div>
-          ) : null}
-        </div>
-        <CardHeader>
-          <CardTitle className={`text-xl ${accent.title}`}>{project.title}</CardTitle>
-          <CardDescription>{project.subtitle}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-gray-300 mb-4">{project.description}</p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {project.technologies.map((tech) => (
-              <Badge key={tech} variant="outline" className={accent.badge}>
-                {tech}
-              </Badge>
-            ))}
+        <Card
+          className={`bg-gray-800 border-2 ${accent.border} overflow-hidden hover-animate ${accent.hoverGlow} cursor-pointer`}
+        >
+          <div className="h-64 md:h-80 bg-gray-700 relative overflow-hidden isolate">
+            <Image
+              src={project.image}
+              alt=""
+              fill
+              aria-hidden="true"
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover scale-110 blur-sm opacity-60"
+            />
+            <div className="absolute inset-0 bg-gray-900/30"></div>
+            <Image
+              src={project.image}
+              alt={project.title}
+              fill
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-contain z-10"
+              style={{ objectPosition: 'center' }}
+            />
+            {project.featured ? (
+              <div className="absolute top-2 right-2">
+                <Badge className="bg-yellow-400 text-black">Featured</Badge>
+              </div>
+            ) : null}
           </div>
-          <div className="flex items-center">
-            <span className={`${accent.title} font-bold mr-2`}>COMPLETION:</span>
-            <div className="h-2 bg-gray-700 rounded-full flex-1">
-              <div className={`h-full ${accent.progress} rounded-full ${project.completionClass}`}></div>
+          <CardHeader>
+            <CardTitle className={`text-xl ${accent.title}`}>{project.title}</CardTitle>
+            <CardDescription>{project.subtitle}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-300 mb-4">{project.description}</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {project.technologies.map((tech) => (
+                <Badge key={tech} variant="outline" className={accent.badge}>
+                  {tech}
+                </Badge>
+              ))}
             </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button
-            variant="outline"
-            className={`${accent.button} hover-scale`}
-            onClick={() => setActiveProject(project)}
-          >
-            View Details
-          </Button>
-          {project.externalLink ? (
-            <Button size="icon" variant="ghost" className="hover-scale" asChild>
-              <a
-                href={project.externalLink}
-                target="_blank"
-                rel="noopener noreferrer"
+            <div className="flex items-center">
+              <span className={`${accent.title} font-bold mr-2`}>COMPLETION:</span>
+              <div className="h-2 bg-gray-700 rounded-full flex-1">
+                <div className={`h-full ${accent.progress} rounded-full ${project.completionClass}`}></div>
+              </div>
+            </div>
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button
+              variant="outline"
+              className={`${accent.button} hover-scale`}
+            >
+              View Details
+            </Button>
+            {project.externalLink ? (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="hover-scale" 
+                onClick={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  window.open(project.externalLink, '_blank', 'noopener,noreferrer')
+                }}
                 aria-label={`Open ${project.title} in a new tab`}
               >
                 <ExternalLink className="h-5 w-5" />
-              </a>
-            </Button>
-          ) : (
-            <Button size="icon" variant="ghost" className="hover-scale opacity-60" disabled>
-              <ExternalLink className="h-5 w-5" />
-            </Button>
-          )}
-        </CardFooter>
-      </Card>
+              </Button>
+            ) : (
+              <Button 
+                size="icon" 
+                variant="ghost" 
+                className="hover-scale opacity-60" 
+                disabled
+                onClick={(e) => e.stopPropagation()}
+              >
+                <ExternalLink className="h-5 w-5" />
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+      </Link>
     )
   }
 
@@ -770,25 +799,28 @@ export default function Home() {
   return (
     <div className="relative min-h-screen overflow-hidden">
       <SeasonEffects season={activeSeason} />
-      <DraggableSeasonIndicator
-        activeSeason={activeSeason}
-        seasons={SEASON_THEMES}
-        nextSeason={nextSeason}
-        anchorRef={borisLinkRef}
-      />
       <div className="relative z-10 flex min-h-screen flex-col text-white [&_p]:text-shadow [&_h1]:text-shadow [&_h2]:text-shadow [&_h3]:text-shadow [&_span]:text-shadow">
         {/* Pixel art header decoration */}
 
       {/* Navigation */}
-      <header className="container mx-auto px-4 py-6 z-10">
-        <nav className="flex justify-between items-center">
-          <Link
-            ref={borisLinkRef}
-            href="/"
-            className="text-2xl font-bold tracking-tighter pixel-text"
-          >
-            BORIS_MOJSA
-          </Link>
+      <header className="container mx-auto px-4 py-6 z-10 relative">
+        <nav className="flex justify-between items-start">
+          <div className="flex flex-col">
+            <Link
+              ref={borisLinkRef}
+              href="/"
+              className="text-2xl font-bold tracking-tighter pixel-text"
+            >
+              BORIS_MOJSA
+            </Link>
+            <div className="mt-2">
+              <SeasonIndicator
+                activeSeason={activeSeason}
+                seasons={SEASON_THEMES}
+                nextSeason={nextSeason}
+              />
+            </div>
+          </div>
           <div className="hidden md:flex items-center space-x-6">
             <Link href="#about" className="hover:text-yellow-400 transition-colors pixel-shift">
               About
@@ -836,37 +868,41 @@ export default function Home() {
       </header>
 
       {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 flex flex-col items-center text-center bg-transparent">
-        <div className="relative mb-8 hover-scale">
-          <div className="absolute inset-0 border-4 border-yellow-400 rounded-full transform translate-x-2 translate-y-2"></div>
-          <div className="relative z-10 w-40 h-40 rounded-full overflow-hidden border-4 border-white">
+      <section className="container mx-auto px-4 py-16 md:py-20 flex flex-col items-center text-center bg-transparent">
+        <div className="relative mb-10 hover-scale">
+          <div className="absolute inset-0 border-4 border-yellow-400 rounded-full transform translate-x-3 translate-y-3"></div>
+          <div className="relative z-10 w-48 h-48 rounded-full overflow-hidden border-4 border-white">
             <Image
-              src="/placeholder.svg?height=160&width=160"
+              src="/images/headshot-2025.png"
               alt="Boris Mojsa"
-              width={160}
-              height={160}
+              width={192}
+              height={192}
               className="object-cover"
+              priority
             />
           </div>
         </div>
-        <h1 className="text-5xl md:text-7xl font-bold mb-4 pixel-text">
+        <h1 className="text-5xl md:text-7xl font-bold mb-6 pixel-text">
           <span className="text-yellow-400">BORIS</span>
           <span className="text-red-500">MOJSA</span>
         </h1>
-        <p className="max-w-2xl text-xl mb-8">
-          <span className="text-green-500 font-bold pixel-text">COMPUTER SCIENCE STUDENT</span> •{" "}
-          <span className="text-red-500 font-bold pixel-text">TRACK & FIELD ATHLETE</span>
+        <p className="max-w-3xl text-lg md:text-xl mb-3">
+          <span className="text-green-500 font-bold pixel-text">Chicago-Based</span>{" "}
+          <span className="text-white font-bold pixel-text">•</span>{" "}
+          <span className="text-yellow-400 font-bold pixel-text">Serbian</span>{" "}
+          <span className="text-white font-bold pixel-text">•</span>{" "}
+          <span className="text-blue-500 font-bold pixel-text">Data Science & Software Engineering</span>
         </p>
-        <div className="flex flex-wrap justify-center gap-4 mb-8">
-          <Badge className="bg-yellow-400 text-black px-3 py-1 text-sm hover-scale">Python</Badge>
-          <Badge className="bg-red-500 px-3 py-1 text-sm hover-scale">C++</Badge>
-          <Badge className="bg-green-500 text-black px-3 py-1 text-sm hover-scale">Java</Badge>
-          <Badge className="bg-blue-500 px-3 py-1 text-sm hover-scale">REST APIs</Badge>
-          <Badge className="bg-purple-500 px-3 py-1 text-sm hover-scale">Flask</Badge>
+        <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-8">
+          <Badge className="bg-yellow-400 text-black px-2.5 py-1 text-xs md:text-sm hover-scale">Python</Badge>
+          <Badge className="bg-red-500 px-2.5 py-1 text-xs md:text-sm hover-scale">SQL</Badge>
+          <Badge className="bg-green-500 text-black px-2.5 py-1 text-xs md:text-sm hover-scale">Azure</Badge>
+          <Badge className="bg-blue-500 px-2.5 py-1 text-xs md:text-sm hover-scale">Generative AI</Badge>
+          <Badge className="bg-purple-500 px-2.5 py-1 text-xs md:text-sm hover-scale">Community Impact</Badge>
         </div>
         <div className="flex flex-wrap gap-4 justify-center">
           <Button asChild className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-6 py-3 rounded-none border-b-4 border-yellow-600 hover:translate-y-1 transition-transform hover-scale">
-            <a href="#projects" target="_blank" rel="noopener noreferrer">
+            <a href="#projects">
               VIEW PROJECTS <ArrowRight className="ml-2 h-4 w-4" />
             </a>
           </Button>
@@ -882,7 +918,7 @@ export default function Home() {
         </div>
 
         {/* Pixel art decorations */}
-        <div className="mt-16 grid grid-cols-5 gap-2">
+        <div className="mt-12 grid grid-cols-5 gap-2">
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
@@ -901,27 +937,36 @@ export default function Home() {
               <div className="absolute -inset-3 rounded-3xl bg-slate-900/55 backdrop-blur-md border border-white/15 shadow-lg"></div>
               <div className="relative space-y-4 rounded-2xl border border-white/10 bg-white/6 px-6 py-6 text-lg shadow-inner">
                 <p>
-                Hello! I'm Boris Mojsa, a Computer Science student at Chicago State University with a minor in
-                Mathematics. I'm passionate about technology and track & field, bringing the same discipline and
-                determination to both arenas.
-              </p>
-              <p>
-                With a perfect 4.0 GPA, I balance rigorous academics with competitive athletics. My technical journey
-                focuses on software development, data analysis, and algorithm optimization, while my athletic pursuits
-                have earned me the TOEFL iBT Athletics Excellence Grant.
-              </p>
-              <p>
-                I'm dedicated to using my technical skills to create innovative solutions that make a positive impact,
-                whether through community-focused digital literacy initiatives or cutting-edge research projects.
-              </p>
+                  Hey yall I'm Boris Mojsa, a Chicago-based computer science student (with a mathematics minor✨),
+                  focused on data science, machine learning, and software engineering. I’m especially interested in how
+                  complex systems behave, and in turning messy, real-world problems into clean, reliable solutions.
+                </p>
+                <p>
+                  I’m an international student from Serbia, which does intail I'm a competitive athlete, which has
+                  shaped how I approach my work: disciplined, consistent, and comfortable with long feedback loops. That
+                  mindset carries into my technical projects, from building data pipelines and experimenting with models
+                  to translating ambiguous problems into scalable systems.
+                </p>
+                <p>
+                  I recently completed a Data Science Internship with the SCALES Open Knowledge Network (via MCDC),
+                  where I worked on applied research and real-world data systems at the intersection of technology and
+                  public knowledge. Alongside this, I’ve been involved in civic-tech and community-focused work,
+                  learning how thoughtful engineering decisions can create impact beyond just performance metrics.
+                </p>
+                <p>
+                  I’m quietly ambitious, highly curious, and motivated by progress over hype. I’m currently seeking
+                  internships and early-career roles in data science, machine learning, or software engineering, where I
+                  can continue learning fast, contributing meaningfully, and building systems that perform under
+                  pressure.
+                </p>
             </div>
             </div>
             <div className="mt-8 flex flex-wrap gap-2">
-              <Badge className="bg-red-500 hover:bg-red-600">Problem Solver</Badge>
-              <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black">Team Leader</Badge>
-              <Badge className="bg-green-500 hover:bg-green-600">Athlete</Badge>
-              <Badge className="bg-blue-500 hover:bg-blue-600">Developer</Badge>
-              <Badge className="bg-purple-500 hover:bg-purple-600">Researcher</Badge>
+              <Badge className="bg-red-500 hover:bg-red-600">Data Science</Badge>
+              <Badge className="bg-yellow-500 hover:bg-yellow-600 text-black">Machine Learning</Badge>
+              <Badge className="bg-green-500 hover:bg-green-600">Software Engineering</Badge>
+              <Badge className="bg-blue-500 hover:bg-blue-600">Python + SQL</Badge>
+              <Badge className="bg-purple-500 hover:bg-purple-600">Runner ☕️</Badge>
             </div>
           </div>
           <div className="md:w-1/2 relative">
@@ -931,22 +976,22 @@ export default function Home() {
                 <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center hover-scale">
                   <BookOpen className="text-yellow-400 mb-2 h-8 w-8" />
                   <span className="text-sm">GPA</span>
-                  <span className="text-xl font-bold">4.0/4.0</span>
+                  <span className="text-xl font-bold">4.00 / 4.00</span>
                 </div>
                 <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center hover-scale">
                   <Trophy className="text-yellow-400 mb-2 h-8 w-8" />
                   <span className="text-sm">Honors</span>
-                  <span className="text-xl font-bold">Dean's List</span>
+                  <span className="text-xl font-bold text-center leading-snug">Dean&apos;s &amp; President&apos;s Lists</span>
                 </div>
                 <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center hover-scale">
-                  <Cpu className="text-yellow-400 mb-2 h-8 w-8" />
-                  <span className="text-sm">Tech Skills</span>
-                  <span className="text-xl font-bold">10+ Languages</span>
+                  <Heart className="text-yellow-400 mb-2 h-8 w-8" />
+                  <span className="text-sm">Hobbies</span>
+                  <span className="text-xl font-bold text-center leading-snug">Running • Coffee • Escape Rooms</span>
                 </div>
                 <div className="bg-gray-700 p-4 rounded-lg flex flex-col items-center hover-scale">
                   <Award className="text-yellow-400 mb-2 h-8 w-8" />
                   <span className="text-sm">Scholarships</span>
-                  <span className="text-xl font-bold">ComEd Scholar</span>
+                  <span className="text-xl font-bold text-center leading-snug">ComEd &amp; TOEFL AEG</span>
                 </div>
               </div>
             </div>
@@ -960,7 +1005,8 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <h2 className="text-4xl font-bold mb-12 pixel-text text-yellow-400 text-center">EDUCATION</h2>
 
-          <div className="max-w-4xl mx-auto bg-gray-800 p-8 rounded-xl border-2 border-yellow-400 relative hover-animate hover-glow-yellow">
+          <Link href="/education/roosevelt" className="block">
+          <div className="max-w-4xl mx-auto bg-gray-800 p-8 rounded-xl border-2 border-yellow-400 relative hover-animate hover-glow-yellow cursor-pointer">
             {/* Pixel art decorations */}
             <div className="absolute top-0 left-0 w-4 h-4 bg-yellow-400 transform -translate-x-2 -translate-y-2"></div>
             <div className="absolute top-0 right-0 w-4 h-4 bg-yellow-400 transform translate-x-2 -translate-y-2"></div>
@@ -974,50 +1020,83 @@ export default function Home() {
                 </div>
               </div>
               <div className="md:w-3/4">
-                <h3 className="text-2xl font-bold mb-2">Chicago State University</h3>
-                <p className="text-yellow-400 mb-4">Bachelor of Science in Computer Science, Minor in Mathematics</p>
+                <h3 className="text-2xl font-bold mb-2">Roosevelt University</h3>
+                <p className="text-yellow-400 mb-4">Bachelor of Science in Computer Science · Minor in Mathematics</p>
                 <p className="text-gray-300 mb-2">Expected Graduation: May 2027</p>
-                <p className="text-gray-300 mb-4">GPA: 4.0</p>
+                <p className="text-gray-300 mb-4">GPA: 4.00</p>
 
-                <h4 className="font-bold text-lg mb-2 text-green-400">Honors & Awards</h4>
-                <ul className="list-disc list-inside mb-4 text-gray-300">
-                  <li>TOEFL iBT Athletics Excellence Grant</li>
-                  <li>ComEd Scholar</li>
-                  <li>Dean's List (Spring 2024)</li>
+                <h4 className="font-bold text-lg mb-2 text-green-400">Scholarships & Awards</h4>
+                <ul className="list-disc list-inside mb-4 text-gray-300 space-y-1">
+                  <li>Athletic Leadership Award</li>
+                  <li>Roosevelt Academic Scholarship</li>
+                  <li>Dean Scholar Award</li>
                 </ul>
 
-                <h4 className="font-bold text-lg mb-2 text-green-400">Relevant Coursework</h4>
+                <h4 className="font-bold text-lg mb-2 text-green-400">Focus Areas</h4>
                 <div className="flex flex-wrap gap-2 mb-4">
                   <Badge variant="outline" className="border-gray-500">
-                    Data Structures
+                    Intelligent Systems
                   </Badge>
                   <Badge variant="outline" className="border-gray-500">
-                    Object Oriented Programming
+                    Statistics
                   </Badge>
                   <Badge variant="outline" className="border-gray-500">
-                    Software Engineering
-                  </Badge>
-                  <Badge variant="outline" className="border-gray-500">
-                    Calculus 1
-                  </Badge>
-                  <Badge variant="outline" className="border-gray-500">
-                    Calculus 2
-                  </Badge>
-                  <Badge variant="outline" className="border-gray-500">
-                    Calculus 3
+                    Data Mining
                   </Badge>
                 </div>
 
                 <div className="mt-6 flex items-center">
                   <div className="mr-4 text-yellow-400 font-bold">PROGRESS</div>
                   <div className="h-4 bg-gray-700 rounded-full flex-1">
-                    <div className="h-full bg-gradient-to-r from-green-500 to-yellow-400 rounded-full w-1/4"></div>
+                    <div className="h-full bg-gradient-to-r from-green-500 to-yellow-400 rounded-full w-[64%]"></div>
                   </div>
-                  <div className="ml-4 text-yellow-400 font-bold">25%</div>
+                  <div className="ml-4 text-yellow-400 font-bold">64%</div>
+                </div>
+                <div className="mt-2 text-sm text-gray-400 text-center">77 / 120 credits</div>
+
+                <div className="mt-10 pt-8 border-t border-yellow-500/40">
+                  <h3 className="text-2xl font-bold mb-2">Chicago State University</h3>
+                  <p className="text-yellow-400 mb-4">Bachelor of Science in Computer Science · Minor in Mathematics</p>
+                  <p className="text-gray-300 mb-2">Summer 2023 – Spring 2025</p>
+                  <p className="text-gray-300 mb-4">GPA: 4.00</p>
+
+                  <h4 className="font-bold text-lg mb-2 text-green-400">Honors & Awards</h4>
+                  <ul className="list-disc list-inside mb-4 text-gray-300 space-y-1">
+                    <li>ComEd Future of Energy Scholar (2025)</li>
+                    <li>TOEFL iBT Athletics Excellence Grant</li>
+                    <li>Dean&apos;s List (Spring &amp; Fall 2024)</li>
+                    <li>President&apos;s List (Spring 2025)</li>
+                  </ul>
+
+                  <h4 className="font-bold text-lg mb-2 text-green-400">Highlights</h4>
+                  <ul className="list-disc list-inside mb-4 text-gray-300 space-y-1">
+                    <li>Completed 64 / 120 credit hours prior to transferring</li>
+                    <li>NCAA Division I track athlete</li>
+                  </ul>
+
+                  <h4 className="font-bold text-lg mb-2 text-green-400">Focus Areas</h4>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Badge variant="outline" className="border-gray-500">
+                      Data Structures
+                    </Badge>
+                    <Badge variant="outline" className="border-gray-500">
+                      Object Oriented Programming
+                    </Badge>
+                    <Badge variant="outline" className="border-gray-500">
+                      Software Engineering
+                    </Badge>
+                    <Badge variant="outline" className="border-gray-500">
+                      Discrete Mathematics
+                    </Badge>
+                    <Badge variant="outline" className="border-gray-500">
+                      Probability &amp; Statistics
+                    </Badge>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+          </Link>
         </div>
       </section>
 
@@ -1026,163 +1105,254 @@ export default function Home() {
         <h2 className="text-4xl font-bold mb-12 pixel-text text-red-400 text-center">EXPERIENCE & LEADERSHIP</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Experience 1 */}
-          <Card className="bg-gray-800 border-2 border-red-500 overflow-hidden hover-animate hover-glow-red">
+          {/* Experience */}
+          <Link href="/experience/mcdc-intern" className="block">
+          <Card className="bg-gray-800 border-2 border-blue-500 overflow-hidden hover-animate hover-glow-blue cursor-pointer">
             <CardHeader className="bg-gray-700">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl text-red-400">Student Digital Navigator</CardTitle>
-                  <CardDescription>Chicago State University</CardDescription>
-                </div>
-                <Badge className="bg-green-500">Current</Badge>
+              <div>
+                <CardTitle className="text-xl text-blue-400">Incoming MCDC Data Science Intern</CardTitle>
+                <CardDescription>Scales Open Knowledge Network (SCALES-OKN)</CardDescription>
               </div>
-              <CardDescription className="text-gray-300">February 2024 - Present</CardDescription>
+              <CardDescription className="text-gray-300">June 2025 – August 2025 · Chicago, Illinois</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ul className="space-y-2 text-gray-300">
+                <li className="flex items-start">
+                  <span className="text-blue-400 mr-2">→</span>
+                  <span>Selected for the DOE-backed MCDC internship focused on open climate data innovation.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-400 mr-2">→</span>
+                  <span>Training on knowledge graph tooling that powers the SCALES open knowledge network.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-400 mr-2">→</span>
+                  <span>Collaborating with faculty mentors to scope analytics pipelines using Python, SQL, and Azure.</span>
+                </li>
+              </ul>
+              <div className="mt-4 flex items-center">
+                <span className="text-blue-400 font-bold mr-2">XP LOADING:</span>
+                <div className="h-2 bg-gray-700 rounded-full flex-1">
+                  <div className="h-full bg-blue-500 rounded-full w-2/5"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          </Link>
+
+          {/* Experience */}
+          <Link href="/experience/digital-navigator" className="block">
+          <Card className="bg-gray-800 border-2 border-red-500 overflow-hidden hover-animate hover-glow-red cursor-pointer">
+            <CardHeader className="bg-gray-700">
+              <div>
+                <CardTitle className="text-xl text-red-400">Student Digital Navigator</CardTitle>
+                <CardDescription>Chicago State University</CardDescription>
+              </div>
+              <CardDescription className="text-gray-300">February 2024 – August 2025 · Chicago, Illinois</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <ul className="space-y-2 text-gray-300">
                 <li className="flex items-start">
                   <span className="text-green-400 mr-2">→</span>
-                  <span>
-                    Conducted 20+ workshops and trained 150+ community members on essential technology skills while
-                    distributing 400+ laptops
-                  </span>
+                  <span>Improved digital access by distributing 400+ laptops and hotspots to residents across the city.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-400 mr-2">→</span>
-                  <span>
-                    Expanded digital inclusion by reaching 10+ neighborhoods and providing 150+ one-on-one training
-                    sessions
-                  </span>
+                  <span>Ran 20+ workshops and trained 150+ community members on essential productivity and safety skills.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-400 mr-2">→</span>
-                  <span>
-                    Promoted digital literacy by engaging 2,000+ participants through outreach and training efforts
-                  </span>
+                  <span>Scaled one-on-one coaching to 150+ sessions spanning 10+ neighborhoods, reaching 2,000+ participants.</span>
                 </li>
               </ul>
               <div className="mt-4 flex items-center">
                 <span className="text-red-400 font-bold mr-2">XP GAINED:</span>
                 <div className="h-2 bg-gray-700 rounded-full flex-1">
-                  <div className="h-full bg-red-500 rounded-full w-4/5"></div>
+                  <div className="h-full bg-red-500 rounded-full w-5/6"></div>
                 </div>
               </div>
             </CardContent>
           </Card>
+          </Link>
 
-          {/* Experience 2 */}
-          <Card className="bg-gray-800 border-2 border-yellow-500 overflow-hidden hover-animate hover-glow-yellow">
+          {/* Experience */}
+          <Link href="/experience/comed-scholar" className="block">
+          <Card className="bg-gray-800 border-2 border-yellow-500 overflow-hidden hover-animate hover-glow-yellow cursor-pointer">
             <CardHeader className="bg-gray-700">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl text-yellow-400">Team Leader</CardTitle>
-                  <CardDescription>U.S. Department of Energy Cyber Force Competition</CardDescription>
-                </div>
-                <Badge className="bg-gray-500">2023</Badge>
+              <div>
+                <CardTitle className="text-xl text-yellow-400">Project Manager · ComEd Scholar</CardTitle>
+                <CardDescription>ComEd Future of Energy Scholar Program</CardDescription>
               </div>
-              <CardDescription className="text-gray-300">November 2023</CardDescription>
+              <CardDescription className="text-gray-300">January 2025 – May 2025 · Chicago, Illinois</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <ul className="space-y-2 text-gray-300">
                 <li className="flex items-start">
                   <span className="text-yellow-400 mr-2">→</span>
-                  <span>Participated in a national cybersecurity event hosted by the Department of Energy</span>
+                  <span>Co-led the four-person &ldquo;Endless Bio Cycle&rdquo; concept converting restaurant waste oil into ASTM-grade biodiesel.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-yellow-400 mr-2">→</span>
-                  <span>
-                    Gained foundational skills in network security, penetration testing, and incident response
-                  </span>
+                  <span>Modeled scenarios showing 43% diesel savings when repurposing in-house feedstock and 20% savings when purchasing oil.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-yellow-400 mr-2">→</span>
-                  <span>Developed risk management expertise through hands-on projects and guided learning</span>
+                  <span>Pitched the operational and emissions impact to ComEd engineers, mentors, and peer scholars.</span>
                 </li>
               </ul>
               <div className="mt-4 flex items-center">
                 <span className="text-yellow-400 font-bold mr-2">XP GAINED:</span>
                 <div className="h-2 bg-gray-700 rounded-full flex-1">
-                  <div className="h-full bg-yellow-500 rounded-full w-3/5"></div>
+                  <div className="h-full bg-yellow-500 rounded-full w-4/5"></div>
                 </div>
               </div>
             </CardContent>
           </Card>
+          </Link>
 
-          {/* Experience 3 */}
-          <Card className="bg-gray-800 border-2 border-green-500 overflow-hidden hover-animate hover-glow-green">
+          {/* Experience */}
+          <Link href="/experience/cyberforce" className="block">
+          <Card className="bg-gray-800 border-2 border-purple-500 overflow-hidden hover-animate hover-glow-purple cursor-pointer">
             <CardHeader className="bg-gray-700">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl text-green-400">Braven Accelerator Fellow</CardTitle>
-                  <CardDescription>Chicago, Illinois</CardDescription>
-                </div>
-                <Badge className="bg-green-500">Current</Badge>
+              <div>
+                <CardTitle className="text-xl text-purple-400">Team Leader</CardTitle>
+                <CardDescription>U.S. Department of Energy CyberForce Competition</CardDescription>
               </div>
-              <CardDescription className="text-gray-300">January 2024 - Present</CardDescription>
+              <CardDescription className="text-gray-300">November 2023 · Chicago, Illinois</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ul className="space-y-2 text-gray-300">
+                <li className="flex items-start">
+                  <span className="text-purple-400 mr-2">→</span>
+                  <span>Ranked within the top 10% of 100+ national teams safeguarding critical infrastructure simulations.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-400 mr-2">→</span>
+                  <span>Directed live incident response, penetration testing, and threat hunting under competition pressure.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-purple-400 mr-2">→</span>
+                  <span>Strengthened zero-trust access models and red-team/blue-team coordination playbooks.</span>
+                </li>
+              </ul>
+              <div className="mt-4 flex items-center">
+                <span className="text-purple-400 font-bold mr-2">XP GAINED:</span>
+                <div className="h-2 bg-gray-700 rounded-full flex-1">
+                  <div className="h-full bg-purple-500 rounded-full w-3/4"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          </Link>
+
+          {/* Experience */}
+          <Link href="/experience/braven-researcher" className="block">
+          <Card className="bg-gray-800 border-2 border-green-500 overflow-hidden hover-animate hover-glow-green cursor-pointer">
+            <CardHeader className="bg-gray-700">
+              <div>
+                <CardTitle className="text-xl text-green-400">Lead Researcher</CardTitle>
+                <CardDescription>Braven Accelerator · Chicago State University</CardDescription>
+              </div>
+              <CardDescription className="text-gray-300">January 2025 – May 2025 · Chicago, Illinois</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <ul className="space-y-2 text-gray-300">
                 <li className="flex items-start">
                   <span className="text-green-400 mr-2">→</span>
-                  <span>
-                    Participating in a career development and leadership accelerator to enhance professional skills
-                  </span>
+                  <span>Directed a five-member capstone team exploring outreach strategies for the Chicago Sky Foundation.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-400 mr-2">→</span>
-                  <span>Developing networking abilities and problem-solving through team-based projects</span>
+                  <span>Conducted 15 interviews and analyzed 50+ survey responses to spotlight three major awareness gaps.</span>
                 </li>
                 <li className="flex items-start">
                   <span className="text-green-400 mr-2">→</span>
-                  <span>Completing workshops on communication, career planning, and data-driven decision-making</span>
+                  <span>Designed the &ldquo;Skybound&rdquo; mentorship program projected to reach 200+ students and lift event turnout 50%.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-green-400 mr-2">→</span>
+                  <span>Presented findings to Braven leadership coaches, Chicago Sky Foundation representatives, and industry mentors.</span>
                 </li>
               </ul>
               <div className="mt-4 flex items-center">
                 <span className="text-green-400 font-bold mr-2">XP GAINED:</span>
                 <div className="h-2 bg-gray-700 rounded-full flex-1">
-                  <div className="h-full bg-green-500 rounded-full w-2/3"></div>
+                  <div className="h-full bg-green-500 rounded-full w-4/5"></div>
                 </div>
               </div>
             </CardContent>
           </Card>
+          </Link>
 
-          {/* Experience 4 */}
-          <Card className="bg-gray-800 border-2 border-blue-500 overflow-hidden hover-animate hover-glow-blue">
+          {/* Experience */}
+          <Link href="/experience/youth-dialogue" className="block">
+          <Card className="bg-gray-800 border-2 border-cyan-500 overflow-hidden hover-animate hover-glow-blue cursor-pointer">
             <CardHeader className="bg-gray-700">
-              <div className="flex justify-between items-start">
-                <div>
-                  <CardTitle className="text-xl text-blue-400">Youth for the Dialogue</CardTitle>
-                  <CardDescription>UNDP & Ana and Vlade Divac Foundation</CardDescription>
-                </div>
-                <Badge className="bg-gray-500">2023</Badge>
+              <div>
+                <CardTitle className="text-xl text-cyan-300">Youth for the Dialogue</CardTitle>
+                <CardDescription>UNDP &amp; Ana and Vlade Divac Foundation</CardDescription>
               </div>
-              <CardDescription className="text-gray-300">March 2023 - August 2023</CardDescription>
+              <CardDescription className="text-gray-300">March 2023 – August 2023 · Belgrade, Serbia</CardDescription>
             </CardHeader>
             <CardContent className="pt-6">
               <ul className="space-y-2 text-gray-300">
                 <li className="flex items-start">
-                  <span className="text-blue-400 mr-2">→</span>
-                  <span>Led community engagement initiatives to promote youth inclusion and equality</span>
+                  <span className="text-cyan-300 mr-2">→</span>
+                  <span>Led UNDP-backed community forums elevating youth voices in policymaking and social justice.</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-400 mr-2">→</span>
-                  <span>
-                    Organized discussions on social justice and policymaking, fostering active youth participation
-                  </span>
+                  <span className="text-cyan-300 mr-2">→</span>
+                  <span>Coordinated initiatives that strengthened trust between young residents and local institutions.</span>
                 </li>
                 <li className="flex items-start">
-                  <span className="text-blue-400 mr-2">→</span>
-                  <span>Implemented projects to strengthen dialogue between young people and local institutions</span>
+                  <span className="text-cyan-300 mr-2">→</span>
+                  <span>Delivered inclusive programming that advanced civic engagement and intercultural dialogue.</span>
                 </li>
               </ul>
               <div className="mt-4 flex items-center">
-                <span className="text-blue-400 font-bold mr-2">XP GAINED:</span>
+                <span className="text-cyan-300 font-bold mr-2">XP GAINED:</span>
                 <div className="h-2 bg-gray-700 rounded-full flex-1">
-                  <div className="h-full bg-blue-500 rounded-full w-3/4"></div>
+                  <div className="h-full bg-cyan-500 rounded-full w-3/4"></div>
                 </div>
               </div>
             </CardContent>
           </Card>
+          </Link>
+
+          {/* Experience */}
+          <Link href="/experience/m-opovo" className="block">
+          <Card className="bg-gray-800 border-2 border-orange-500 overflow-hidden hover-animate hover-glow-orange cursor-pointer">
+            <CardHeader className="bg-gray-700">
+              <div>
+                <CardTitle className="text-xl text-orange-400">Co-Founder &amp; Operations Manager</CardTitle>
+                <CardDescription>M Opovo</CardDescription>
+              </div>
+              <CardDescription className="text-gray-300">May 2024 – Present · Opovo, Serbia</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <ul className="space-y-2 text-gray-300">
+                <li className="flex items-start">
+                  <span className="text-orange-400 mr-2">→</span>
+                  <span>Managed end-to-end business operations and digital marketing, generating $50,000 annual revenue through automated systems and multi-channel campaigns.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-orange-400 mr-2">→</span>
+                  <span>Developed an e-commerce platform using Next.js and TypeScript, automating order processing with payment integrations and inventory tracking.</span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-orange-400 mr-2">→</span>
+                  <span>Optimized marketing campaigns and sales operations, managing 3 tons of honey annually with A/B testing and conversion rate analysis.</span>
+                </li>
+              </ul>
+              <div className="mt-4 flex items-center">
+                <span className="text-orange-400 font-bold mr-2">XP GAINED:</span>
+                <div className="h-2 bg-gray-700 rounded-full flex-1">
+                  <div className="h-full bg-orange-500 rounded-full w-full"></div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          </Link>
         </div>
       </section>
 
@@ -1234,79 +1404,6 @@ export default function Home() {
           </div>
         </div>
 
-        <Dialog open={Boolean(activeProject)} onOpenChange={(open) => (!open ? setActiveProject(null) : undefined)}>
-          <DialogContent className="max-w-3xl border border-purple-500 bg-gray-900 text-white">
-            {activeProject ? (
-              <div className="space-y-6">
-                <DialogHeader>
-                  <DialogTitle className={`text-3xl font-bold ${accentStyles[activeProject.accent].dialogAccent}`}>
-                    {activeProject.title}
-                  </DialogTitle>
-                  <DialogDescription className="text-gray-300">
-                    {activeProject.subtitle}
-                  </DialogDescription>
-                </DialogHeader>
-
-                <div className="relative h-48 w-full overflow-hidden rounded-md border border-gray-800">
-                  <Image
-                    src={activeProject.image}
-                    alt={activeProject.title}
-                    width={800}
-                    height={320}
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-
-                <p className="text-gray-200 leading-relaxed">{activeProject.longDescription}</p>
-
-                {activeProject.highlights ? (
-                  <div>
-                    <h4 className="mb-3 text-lg font-semibold text-purple-300">Highlights</h4>
-                    <ul className="list-disc space-y-2 pl-5 text-gray-300">
-                      {activeProject.highlights.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                <div>
-                  <h4 className="mb-3 text-lg font-semibold text-purple-300">Tech Stack</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {activeProject.technologies.map((tech) => (
-                      <Badge key={tech} variant="outline" className={accentStyles[activeProject.accent].badge}>
-                        {tech}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-3 border-t border-gray-800 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                  {activeProject.externalLink ? (
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="border-purple-500 text-purple-300 hover:bg-purple-500 hover:text-white hover-scale"
-                    >
-                      <a href={activeProject.externalLink} target="_blank" rel="noopener noreferrer">
-                        Open Project <ExternalLink className="ml-2 h-4 w-4" />
-                      </a>
-                    </Button>
-                  ) : (
-                    <span className="text-sm text-gray-500">Project link coming soon.</span>
-                  )}
-
-                  <Button
-                    onClick={() => setActiveProject(null)}
-                    className="bg-purple-500 text-white hover:bg-purple-600 hover-scale"
-                  >
-                    Back to Portfolio
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </DialogContent>
-        </Dialog>
       </section>
 
       {/* Track & Field Achievements */}
@@ -1315,14 +1412,14 @@ export default function Home() {
 
         <div className="relative">
           {/* Track field decoration */}
-          <div className="absolute inset-0 bg-gray-800 rounded-xl overflow-hidden">
-            <div className="h-full w-full bg-[url('/placeholder.svg?height=400&width=1200')] bg-cover bg-center opacity-20"></div>
+          <div className="absolute inset-0 bg-gray-800 rounded-xl overflow-hidden backdrop-blur-sm">
             <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 via-transparent to-green-500/20"></div>
           </div>
 
           <div className="relative z-10 p-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-gray-800/80 p-6 rounded-xl border-l-4 border-yellow-400 hover-animate hover-glow-yellow">
+              <Link href="/achievements/toefl-grant" className="block">
+              <div className="bg-gray-800/80 p-6 rounded-xl border-l-4 border-yellow-400 hover-animate hover-glow-yellow cursor-pointer">
                 <div className="flex items-start gap-4">
                   <Medal className="text-yellow-400 h-12 w-12 flex-shrink-0" />
                   <div>
@@ -1341,28 +1438,52 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+              </Link>
 
-              <div className="bg-gray-800/80 p-6 rounded-xl border-l-4 border-green-500 hover-animate hover-glow-green">
+              <Link href="/achievements/ncaa-athlete" className="block">
+              <div className="bg-gray-800/80 p-6 rounded-xl border-l-4 border-blue-500 hover-animate hover-glow-blue cursor-pointer">
                 <div className="flex items-start gap-4">
-                  <Trophy className="text-green-500 h-12 w-12 flex-shrink-0" />
+                  <Trophy className="text-blue-500 h-12 w-12 flex-shrink-0" />
                   <div>
-                    <h3 className="text-2xl font-bold mb-2">Track & Field Team Member</h3>
-                    <p className="text-gray-300 mb-4">Chicago State University</p>
+                    <h3 className="text-2xl font-bold mb-2">NCAA Division I & II Athlete</h3>
+                    <p className="text-gray-300 mb-4">Chicago State University & Roosevelt University</p>
                     <p className="text-sm text-gray-400">
-                      Active member of the Chicago State University Track & Field team, representing the university in
-                      collegiate competitions.
+                      Competing at the highest levels of collegiate athletics across both Division I and Division II programs.
                     </p>
                     <div className="mt-4 flex items-center">
-                      <span className="text-green-500 font-bold">+350 XP</span>
+                      <span className="text-blue-500 font-bold">+400 XP</span>
                       <div className="ml-4 h-2 bg-gray-700 rounded-full flex-1 max-w-xs">
-                        <div className="h-full bg-green-500 rounded-full w-3/5"></div>
+                        <div className="h-full bg-blue-500 rounded-full w-4/5"></div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+              </Link>
 
-              <div className="bg-gray-800/80 p-6 rounded-xl border-l-4 border-red-500 md:col-span-2 hover-animate hover-glow-red">
+              <Link href="/achievements/serbia-national" className="block">
+              <div className="bg-gray-800/80 p-6 rounded-xl border-l-4 border-green-500 hover-animate hover-glow-green cursor-pointer">
+                <div className="flex items-start gap-4">
+                  <Trophy className="text-green-500 h-12 w-12 flex-shrink-0" />
+                  <div>
+                    <h3 className="text-2xl font-bold mb-2">Serbia National Team Member</h3>
+                    <p className="text-gray-300 mb-4">Serbia Athletics</p>
+                    <p className="text-sm text-gray-400">
+                      Representing Serbia on the international stage as a member of the national track & field team.
+                    </p>
+                    <div className="mt-4 flex items-center">
+                      <span className="text-green-500 font-bold">+450 XP</span>
+                      <div className="ml-4 h-2 bg-gray-700 rounded-full flex-1 max-w-xs">
+                        <div className="h-full bg-green-500 rounded-full w-4/5"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </Link>
+
+              <Link href="/achievements/athletic-skills" className="block">
+              <div className="bg-gray-800/80 p-6 rounded-xl border-l-4 border-red-500 hover-animate hover-glow-red cursor-pointer">
                 <div className="flex items-start gap-4">
                   <div className="bg-gray-700 p-3 rounded-lg">
                     <svg
@@ -1423,11 +1544,21 @@ export default function Home() {
                   </div>
                 </div>
               </div>
+              </Link>
             </div>
 
             <div className="mt-12 text-center">
-              <Button className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 py-6 text-lg rounded-none border-b-4 border-yellow-600 hover:translate-y-1 transition-transform hover-scale">
-                VIEW ATHLETIC PROFILE <ArrowRight className="ml-2" />
+              <Button 
+                asChild
+                className="bg-yellow-400 hover:bg-yellow-500 text-black font-bold px-8 py-6 text-lg rounded-none border-b-4 border-yellow-600 hover:translate-y-1 transition-transform hover-scale"
+              >
+                <a 
+                  href="https://worldathletics.org/athletes/serbia/boris-mojsa-14882855" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                >
+                  VIEW ATHLETIC PROFILE <ArrowRight className="ml-2" />
+                </a>
               </Button>
             </div>
           </div>
@@ -1440,11 +1571,12 @@ export default function Home() {
           <h2 className="text-4xl font-bold mb-12 pixel-text text-blue-400 text-center">TECHNICAL SKILLS</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="bg-gray-800 border-2 border-blue-500 hover-animate hover-glow-blue">
+            <Link href="/skills/languages-data" className="block">
+            <Card className="bg-gray-800 border-2 border-blue-500 hover-animate hover-glow-blue cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <Cpu className="h-6 w-6 text-blue-400" />
-                  <CardTitle className="text-xl text-blue-400">Programming Languages</CardTitle>
+                  <CardTitle className="text-xl text-blue-400">Languages &amp; Data</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -1452,10 +1584,10 @@ export default function Home() {
                   <div className="progress-bar-animate">
                     <div className="flex justify-between mb-1">
                       <span className="text-sm font-medium">Python</span>
-                      <span className="text-sm font-medium text-blue-400">90%</span>
+                      <span className="text-sm font-medium text-blue-400">95%</span>
                     </div>
                     <div className="h-2 bg-gray-700 rounded-full">
-                      <div className="h-full bg-blue-500 rounded-full w-[90%] progress-fill"></div>
+                      <div className="h-full bg-blue-500 rounded-full w-[95%] progress-fill"></div>
                     </div>
                   </div>
                   <div className="progress-bar-animate">
@@ -1470,26 +1602,28 @@ export default function Home() {
                   <div className="progress-bar-animate">
                     <div className="flex justify-between mb-1">
                       <span className="text-sm font-medium">Java</span>
-                      <span className="text-sm font-medium text-blue-400">80%</span>
+                      <span className="text-sm font-medium text-blue-400">85%</span>
                     </div>
                     <div className="h-2 bg-gray-700 rounded-full">
-                      <div className="h-full bg-blue-500 rounded-full w-[80%] progress-fill"></div>
+                      <div className="h-full bg-blue-500 rounded-full w-[85%] progress-fill"></div>
                     </div>
                   </div>
                   <div className="progress-bar-animate">
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">JavaScript</span>
-                      <span className="text-sm font-medium text-blue-400">75%</span>
+                      <span className="text-sm font-medium">SQL</span>
+                      <span className="text-sm font-medium text-blue-400">85%</span>
                     </div>
                     <div className="h-2 bg-gray-700 rounded-full">
-                      <div className="h-full bg-blue-500 rounded-full w-[75%] progress-fill"></div>
+                      <div className="h-full bg-blue-500 rounded-full w-[85%] progress-fill"></div>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
+            </Link>
 
-            <Card className="bg-gray-800 border-2 border-green-500 hover-animate hover-glow-green">
+            <Link href="/skills/cloud-platforms" className="block">
+            <Card className="bg-gray-800 border-2 border-green-500 hover-animate hover-glow-green cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <svg
@@ -1507,14 +1641,14 @@ export default function Home() {
                     <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path>
                     <path d="M13 5v14"></path>
                   </svg>
-                  <CardTitle className="text-xl text-green-400">Web Development</CardTitle>
+                  <CardTitle className="text-xl text-green-400">Cloud &amp; Platforms</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="progress-bar-animate">
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Flask</span>
+                      <span className="text-sm font-medium">Microsoft Azure</span>
                       <span className="text-sm font-medium text-green-400">85%</span>
                     </div>
                     <div className="h-2 bg-gray-700 rounded-full">
@@ -1532,27 +1666,29 @@ export default function Home() {
                   </div>
                   <div className="progress-bar-animate">
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">HTML/CSS</span>
-                      <span className="text-sm font-medium text-green-400">75%</span>
+                      <span className="text-sm font-medium">Flask &amp; FastAPI</span>
+                      <span className="text-sm font-medium text-green-400">82%</span>
                     </div>
                     <div className="h-2 bg-gray-700 rounded-full">
-                      <div className="h-full bg-green-500 rounded-full w-[75%] progress-fill"></div>
+                      <div className="h-full bg-green-500 rounded-full w-[82%] progress-fill"></div>
                     </div>
                   </div>
                   <div className="progress-bar-animate">
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Database Management</span>
-                      <span className="text-sm font-medium text-green-400">70%</span>
+                      <span className="text-sm font-medium">Power BI &amp; Tableau</span>
+                      <span className="text-sm font-medium text-green-400">78%</span>
                     </div>
                     <div className="h-2 bg-gray-700 rounded-full">
-                      <div className="h-full bg-green-500 rounded-full w-[70%] progress-fill"></div>
+                      <div className="h-full bg-green-500 rounded-full w-[78%] progress-fill"></div>
                     </div>
                   </div>
                 </div>
               </CardContent>
             </Card>
+            </Link>
 
-            <Card className="bg-gray-800 border-2 border-purple-500 hover-animate hover-glow-purple">
+            <Link href="/skills/ai-delivery" className="block">
+            <Card className="bg-gray-800 border-2 border-purple-500 hover-animate hover-glow-purple cursor-pointer">
               <CardHeader>
                 <div className="flex items-center gap-3">
                   <svg
@@ -1572,14 +1708,14 @@ export default function Home() {
                     <path d="M22 2h-10v10h10V2Z"></path>
                     <path d="M12 12h10v10H12V12Z"></path>
                   </svg>
-                  <CardTitle className="text-xl text-purple-400">Other Skills</CardTitle>
+                  <CardTitle className="text-xl text-purple-400">AI &amp; Delivery</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="progress-bar-animate">
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Data Analysis</span>
+                      <span className="text-sm font-medium">Machine Learning</span>
                       <span className="text-sm font-medium text-purple-400">85%</span>
                     </div>
                     <div className="h-2 bg-gray-700 rounded-full">
@@ -1588,35 +1724,137 @@ export default function Home() {
                   </div>
                   <div className="progress-bar-animate">
                     <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Cloud Computing</span>
-                      <span className="text-sm font-medium text-purple-400">75%</span>
-                    </div>
-                    <div className="h-2 bg-gray-700 rounded-full">
-                      <div className="h-full bg-purple-500 rounded-full w-[75%] progress-fill"></div>
-                    </div>
-                  </div>
-                  <div className="progress-bar-animate">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Agile Methodology</span>
-                      <span className="text-sm font-medium text-purple-400">70%</span>
-                    </div>
-                    <div className="h-2 bg-gray-700 rounded-full">
-                      <div className="h-full bg-purple-500 rounded-full w-[70%] progress-fill"></div>
-                    </div>
-                  </div>
-                  <div className="progress-bar-animate">
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm font-medium">Testing & Troubleshooting</span>
+                      <span className="text-sm font-medium">Generative AI</span>
                       <span className="text-sm font-medium text-purple-400">80%</span>
                     </div>
                     <div className="h-2 bg-gray-700 rounded-full">
                       <div className="h-full bg-purple-500 rounded-full w-[80%] progress-fill"></div>
                     </div>
                   </div>
+                  <div className="progress-bar-animate">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium">Agile &amp; SDLC</span>
+                      <span className="text-sm font-medium text-purple-400">80%</span>
+                    </div>
+                    <div className="h-2 bg-gray-700 rounded-full">
+                      <div className="h-full bg-purple-500 rounded-full w-[80%] progress-fill"></div>
+                    </div>
+                  </div>
+                  <div className="progress-bar-animate">
+                    <div className="flex justify-between mb-1">
+                      <span className="text-sm font-medium">CI/CD &amp; Testing</span>
+                      <span className="text-sm font-medium text-purple-400">78%</span>
+                    </div>
+                    <div className="h-2 bg-gray-700 rounded-full">
+                      <div className="h-full bg-purple-500 rounded-full w-[78%] progress-fill"></div>
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+            </Link>
           </div>
+        </div>
+      </section>
+
+      <section id="certifications" className="container mx-auto px-4 py-20 bg-transparent">
+        <h2 className="text-4xl font-bold mb-12 pixel-text text-yellow-300 text-center">CERTIFICATIONS &amp; INTERESTS</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <Card className="bg-gray-800 border-2 border-yellow-400 hover-animate hover-glow-yellow">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Medal className="h-6 w-6 text-yellow-300" />
+                <CardTitle className="text-xl text-yellow-300">Certifications</CardTitle>
+              </div>
+              <CardDescription>Keeping credentials fresh to unlock new quests.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-4 text-gray-300">
+                <li className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-white">CompTIA Security+</p>
+                    <p className="text-sm text-gray-400">CompTIA · In Progress</p>
+                  </div>
+                  <Badge className="bg-blue-500">Security</Badge>
+                </li>
+                <li className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-white">AWS Solutions Architect Associate</p>
+                    <p className="text-sm text-gray-400">Amazon Web Services · In Progress</p>
+                  </div>
+                  <Badge className="bg-orange-500">Cloud</Badge>
+                </li>
+                <li className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-white">Artificial Intelligence Fundamentals</p>
+                    <p className="text-sm text-gray-400">IBM SkillsBuild · Issued July 2024</p>
+                  </div>
+                  <Badge className="bg-yellow-400 text-black">AI</Badge>
+                </li>
+                <li className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-white">Fundamentals of Digital Marketing</p>
+                    <p className="text-sm text-gray-400">Google Digital Garage · Issued Dec 2022</p>
+                  </div>
+                  <Badge className="bg-red-500">IAB Europe</Badge>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gray-800 border-2 border-red-500 hover-animate hover-glow-red">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Trophy className="h-6 w-6 text-red-400" />
+                <CardTitle className="text-xl text-red-400">Soft Skill Power-Ups</CardTitle>
+              </div>
+              <CardDescription>Attributes that keep team morale and momentum high.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3 text-gray-300">
+                {[
+                  "Analytical Thinking & Problem-Solving",
+                  "Client-Facing Communication & Storytelling",
+                  "Cross-functional Collaboration & Team Leadership",
+                  "Adaptability & Strategic Prioritization",
+                  "Presentation Design & Facilitation",
+                ].map((skill) => (
+                  <li key={skill} className="flex items-start gap-2">
+                    <span className="text-red-400">→</span>
+                    <span>{skill}</span>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gray-800 border-2 border-green-500 hover-animate hover-glow-green">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Award className="h-6 w-6 text-green-400" />
+                <CardTitle className="text-xl text-green-400">Player Two Interests</CardTitle>
+              </div>
+              <CardDescription>Topics I explore when I’m not debugging code or sprinting 400m.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  "AI-Driven Consulting",
+                  "Machine Learning in Legal Tech",
+                  "Digital Transformation",
+                  "Track & Field",
+                  "Design Thinking",
+                  "Human-Centric Tech",
+                  "Stock Market Analysis",
+                ].map((interest) => (
+                  <Badge key={interest} variant="outline" className="border-green-400 text-green-300 hover-scale">
+                    {interest}
+                  </Badge>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
@@ -1631,172 +1869,108 @@ export default function Home() {
           <div className="absolute bottom-0 left-0 w-4 h-4 bg-green-500 transform -translate-x-2 translate-y-2"></div>
           <div className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 transform translate-x-2 translate-y-2"></div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="max-w-4xl mx-auto">
             <div>
               <h3 className="text-2xl font-bold mb-4 text-yellow-400">Get In Touch</h3>
               <p className="mb-6 text-gray-300">
-                Have a question or want to work together? Drop me a message and I'll get back to you as soon as
-                possible!
+                Have a question or want to work together? Reach out through any of the channels below!
               </p>
 
-              <div className="space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-500 p-2 rounded-lg">
-                    <Mail className="h-5 w-5 text-black" />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-green-500 p-2 rounded-lg">
+                      <Mail className="h-5 w-5 text-black" />
+                    </div>
+                    <span>mojsaboris@gmail.com</span>
                   </div>
-                  <span>mojsaboris@gmail.com</span>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-green-500 p-2 rounded-lg">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-5 w-5 text-black"
+                      >
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                      </svg>
+                    </div>
+                    <span>(773) 310-9612</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-green-500 p-2 rounded-lg">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="h-5 w-5 text-black"
+                      >
+                        <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                    </div>
+                    <span>Chicago, IL</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-500 p-2 rounded-lg">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5 text-black"
+
+                <div>
+                  <h4 className="font-bold mb-2 text-yellow-400">Connect With Me:</h4>
+                  <div className="flex gap-4">
+                    <Button
+                      asChild
+                      size="icon"
+                      variant="outline"
+                      className="rounded-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale"
                     >
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
-                  </div>
-                  <span>(773) 310-9612</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-green-500 p-2 rounded-lg">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5 text-black"
+                      <a
+                        href="https://www.linkedin.com/in/borismojsa/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="LinkedIn"
+                      >
+                        <Linkedin className="h-5 w-5" />
+                      </a>
+                    </Button>
+                    <Button
+                      asChild
+                      size="icon"
+                      variant="outline"
+                      className="rounded-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale"
                     >
-                      <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"></path>
-                      <circle cx="12" cy="10" r="3"></circle>
-                    </svg>
+                      <a
+                        href="https://github.com/BorisMojsa"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="GitHub"
+                      >
+                        <Github className="h-5 w-5" />
+                      </a>
+                    </Button>
+                    <Button
+                      asChild
+                      size="icon"
+                      variant="outline"
+                      className="rounded-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale"
+                    >
+                      <a href="mailto:mojsaboris@gmail.com" aria-label="Email Boris">
+                        <Mail className="h-5 w-5" />
+                      </a>
+                    </Button>
                   </div>
-                  <span>Chicago, IL</span>
                 </div>
               </div>
-
-              <div className="mt-8">
-                <h4 className="font-bold mb-2 text-yellow-400">Connect With Me:</h4>
-                <div className="flex gap-4">
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="rounded-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5"
-                    >
-                      <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path>
-                      <rect x="2" y="9" width="4" height="12"></rect>
-                      <circle cx="4" cy="4" r="2"></circle>
-                    </svg>
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="rounded-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5"
-                    >
-                      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                    </svg>
-                  </Button>
-                  <Button
-                    size="icon"
-                    variant="outline"
-                    className="rounded-full border-green-500 text-green-500 hover:bg-green-500 hover:text-white hover-scale"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="2"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      className="h-5 w-5"
-                    >
-                      <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
-                      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
-                      <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
-                    </svg>
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <form className="space-y-4">
-                <div>
-                  <label htmlFor="name" className="block text-sm font-medium mb-1 text-yellow-400">
-                    Your Name
-                  </label>
-                  <input
-                    type="text"
-                    id="name"
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 hover-scale"
-                    placeholder="Enter your name"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="email" className="block text-sm font-medium mb-1 text-yellow-400">
-                    Your Email
-                  </label>
-                  <input
-                    type="email"
-                    id="email"
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 hover-scale"
-                    placeholder="Enter your email"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="message" className="block text-sm font-medium mb-1 text-yellow-400">
-                    Message
-                  </label>
-                  <textarea
-                    id="message"
-                    rows={5}
-                    className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 hover-scale"
-                    placeholder="Enter your message"
-                  />
-                </div>
-                <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold py-3 rounded-none border-b-4 border-green-700 hover:translate-y-1 transition-transform hover-scale">
-                  SEND MESSAGE
-                </Button>
-              </form>
             </div>
           </div>
         </div>
@@ -1846,6 +2020,19 @@ export default function Home() {
           <p className="text-center text-xs text-gray-500 mt-8 pixel-text">PRESS START TO CONTINUE...</p>
         </div>
       </footer>
+
+      {/* Scroll to Top Button */}
+      <button
+        onClick={scrollToTop}
+        aria-label="Scroll to top"
+        className={cn(
+          "fixed bottom-8 right-8 z-50 p-4 bg-yellow-400 hover:bg-yellow-500 text-black rounded-full shadow-lg transition-all duration-300 hover-scale border-4 border-yellow-600",
+          showScrollTop ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"
+        )}
+        style={{ boxShadow: "0 6px 0 rgba(0, 0, 0, 0.3)" }}
+      >
+        <ArrowUp className="h-6 w-6" />
+      </button>
     </div>
   </div>
   )

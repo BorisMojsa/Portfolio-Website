@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 type AnimatedPalette = {
   sky: string
@@ -35,13 +35,24 @@ const defaultPalette: AnimatedPalette = {
 export function AnimatedBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const paletteRef = useRef<AnimatedPalette>(defaultPalette)
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas) return
+    if (!canvas) {
+      console.warn("Canvas ref not available")
+      // Fallback: hide loading if canvas isn't available
+      setTimeout(() => setIsLoading(() => false), 1000)
+      return
+    }
 
     const ctx = canvas.getContext("2d", { alpha: false })
-    if (!ctx) return
+    if (!ctx) {
+      console.warn("Canvas context not available")
+      // Fallback: hide loading if context isn't available
+      setTimeout(() => setIsLoading(() => false), 1000)
+      return
+    }
 
     const handleSeasonChange = (event: Event) => {
       const detail = (event as CustomEvent<{ palette?: AnimatedPalette }>).detail
@@ -57,8 +68,8 @@ export function AnimatedBackground() {
 
     // Runner sprite properties need to be defined before resize logic
     const runnerWidth = 32
-    const runnerHeight = 32
-    const spriteFrames = 4
+    const runnerHeight = 40
+    const spriteFrames = 6
     let currentFrame = 0
     let runnerX = -runnerWidth
     let runnerY = 0 // Position on track (set after first resize)
@@ -149,56 +160,77 @@ export function AnimatedBackground() {
       spriteCtx.clearRect(0, 0, runnerSprite.width, runnerSprite.height)
       spriteCtx.imageSmoothingEnabled = false // Disable anti-aliasing for pixel art
 
-      // Create a classic pixel runner with 4 frames
+      // Create a detailed retro-style pixel runner with 6 frames
       const headColor = "#F5DEB3" // Beige color for head
+      const skinColor = "#FFDBAC" // Slightly darker skin for arms/legs
+      const shirtColor = "#FF0000" // Red shirt
+      const shortsColor = "#0000FF" // Blue shorts
+      const shoeColor = "#000000" // Black shoes
 
-      // Frame 1
-      spriteCtx.fillStyle = "#FF0000" // Red shirt
-      spriteCtx.fillRect(4, 4, 10, 10) // Torso
-      spriteCtx.fillStyle = "#0000FF" // Blue shorts
-      spriteCtx.fillRect(4, 14, 10, 6) // Shorts
-      spriteCtx.fillStyle = "#FFFFFF" // White skin tone
-      spriteCtx.fillRect(6, 20, 3, 8) // Left leg down
-      spriteCtx.fillRect(12, 20, 3, 8) // Right leg back
-      spriteCtx.fillStyle = headColor // Beige head
-      spriteCtx.fillRect(6, 0, 6, 4) // Head
+      // Helper function to draw a frame
+      const drawFrame = (frameOffset: number, leftLegY: number, rightLegY: number, leftArmAngle: number, rightArmAngle: number, leftLegAngle: number, rightLegAngle: number) => {
+        const x = frameOffset
+        
+        // Head (more detailed)
+        spriteCtx.fillStyle = headColor
+        spriteCtx.fillRect(x + 10, 2, 12, 10) // Head
+        // Eyes
+        spriteCtx.fillStyle = "#000000"
+        spriteCtx.fillRect(x + 12, 5, 2, 2) // Left eye
+        spriteCtx.fillRect(x + 18, 5, 2, 2) // Right eye
+        // Hair
+        spriteCtx.fillStyle = "#3D2817"
+        spriteCtx.fillRect(x + 10, 2, 12, 3) // Hair on top
+        
+        // Torso (shirt)
+        spriteCtx.fillStyle = shirtColor
+        spriteCtx.fillRect(x + 8, 12, 16, 12) // Torso
+        
+        // Arms (static - no movement)
+        spriteCtx.fillStyle = skinColor
+        // Left arm - always in same position
+        spriteCtx.fillRect(x + 4, 16, 4, 8) // Left arm
+        // Right arm - always in same position
+        spriteCtx.fillRect(x + 24, 16, 4, 8) // Right arm
+        
+        // Shorts
+        spriteCtx.fillStyle = shortsColor
+        spriteCtx.fillRect(x + 8, 24, 16, 6) // Shorts
+        
+        // Legs (running animation)
+        spriteCtx.fillStyle = skinColor
+        // Left leg
+        spriteCtx.fillRect(x + 10, 30, 4, leftLegY) // Left leg
+        // Right leg
+        spriteCtx.fillRect(x + 18, 30, 4, rightLegY) // Right leg
+        
+        // Shoes
+        spriteCtx.fillStyle = shoeColor
+        spriteCtx.fillRect(x + 9, 30 + leftLegY, 6, 3) // Left shoe
+        spriteCtx.fillRect(x + 17, 30 + rightLegY, 6, 3) // Right shoe
+      }
 
-      // Frame 2
-      spriteCtx.fillStyle = "#FF0000" // Red shirt
-      spriteCtx.fillRect(4 + runnerWidth, 4, 10, 10) // Torso
-      spriteCtx.fillStyle = "#0000FF" // Blue shorts
-      spriteCtx.fillRect(4 + runnerWidth, 14, 10, 6) // Shorts
-      spriteCtx.fillStyle = "#FFFFFF" // White skin tone
-      spriteCtx.fillRect(6 + runnerWidth, 20, 3, 6) // Left leg up
-      spriteCtx.fillRect(12 + runnerWidth, 20, 3, 8) // Right leg down
-      spriteCtx.fillStyle = headColor // Beige head
-      spriteCtx.fillRect(6 + runnerWidth, 0, 6, 4) // Head
-
-      // Frame 3
-      spriteCtx.fillStyle = "#FF0000" // Red shirt
-      spriteCtx.fillRect(4 + runnerWidth * 2, 4, 10, 10) // Torso
-      spriteCtx.fillStyle = "#0000FF" // Blue shorts
-      spriteCtx.fillRect(4 + runnerWidth * 2, 14, 10, 6) // Shorts
-      spriteCtx.fillStyle = "#FFFFFF" // White skin tone
-      spriteCtx.fillRect(6 + runnerWidth * 2, 20, 3, 8) // Left leg back
-      spriteCtx.fillRect(12 + runnerWidth * 2, 20, 3, 6) // Right leg up
-      spriteCtx.fillStyle = headColor // Beige head
-      spriteCtx.fillRect(6 + runnerWidth * 2, 0, 6, 4) // Head
-
-      // Frame 4
-      spriteCtx.fillStyle = "#FF0000" // Red shirt
-      spriteCtx.fillRect(4 + runnerWidth * 3, 4, 10, 10) // Torso
-      spriteCtx.fillStyle = "#0000FF" // Blue shorts
-      spriteCtx.fillRect(4 + runnerWidth * 3, 14, 10, 6) // Shorts
-      spriteCtx.fillStyle = "#FFFFFF" // White skin tone
-      spriteCtx.fillRect(6 + runnerWidth * 3, 20, 3, 8) // Left leg down
-      spriteCtx.fillRect(12 + runnerWidth * 3, 20, 3, 8) // Right leg down
-      spriteCtx.fillStyle = headColor // Beige head
-      spriteCtx.fillRect(6 + runnerWidth * 3, 0, 6, 4) // Head
+      // Frame 1: Left leg forward, right leg back
+      drawFrame(0, 8, 6, 0, 0, 8, 6)
+      
+      // Frame 2: Transition
+      drawFrame(runnerWidth, 7, 7, 0, 0, 7, 7)
+      
+      // Frame 3: Right leg forward, left leg back
+      drawFrame(runnerWidth * 2, 6, 8, 0, 0, 6, 8)
+      
+      // Frame 4: Transition
+      drawFrame(runnerWidth * 3, 7, 7, 0, 0, 7, 7)
+      
+      // Frame 5: Left leg forward again (slight variation)
+      drawFrame(runnerWidth * 4, 8, 6, 0, 0, 8, 6)
+      
+      // Frame 6: Right leg forward (slight variation)
+      drawFrame(runnerWidth * 5, 6, 8, 0, 0, 6, 8)
     }
 
     // Draw a classic pixelated cloud
-    const drawCloud = (x, y, width, height, type) => {
+    const drawCloud = (x: number, y: number, width: number, height: number, type: number) => {
       const palette = paletteRef.current
       // Round to nearest pixel for crisp edges
       x = Math.floor(x)
@@ -235,7 +267,7 @@ export function AnimatedBackground() {
       ctx.fillRect(x, y + height - shadowHeight, width, shadowHeight)
     }
 
-    const drawMountain = (x, baseWidth, height, baseY) => {
+    const drawMountain = (x: number, baseWidth: number, height: number, baseY: number) => {
       const palette = paletteRef.current
       x = Math.floor(x)
       baseWidth = Math.floor(baseWidth)
@@ -271,7 +303,7 @@ export function AnimatedBackground() {
     }
 
     // Draw classic pixelated trees
-    const drawTree = (x, y, size, type) => {
+    const drawTree = (x: number, y: number, size: number, type: number) => {
       const palette = paletteRef.current
       // Round to nearest pixel for crisp edges
       x = Math.floor(x)
@@ -369,12 +401,22 @@ export function AnimatedBackground() {
       ctx.fillStyle = palette.grass
       ctx.fillRect(0, grassY, vw, grassHeight)
 
-      // Draw trees on grass
-      for (const tree of trees) {
-        // Position trees on the grass
+      // Calculate tree positions and sort by Y position for proper depth
+      // In canvas coordinates, Y increases downward:
+      // - Smaller Y = higher on screen = farther away = should be drawn first (behind)
+      // - Larger Y = lower on screen = closer to viewer = should be drawn last (in front)
+      const treePositions = trees.map((tree) => {
         const minBaseY = grassY + grassHeight * 0.2
         const maxBaseY = grassY + grassHeight * 0.95
         const treeY = minBaseY + tree.verticalFactor * (maxBaseY - minBaseY)
+        return { tree, treeY }
+      })
+
+      // Sort by Y position in ascending order (smaller Y = farther = draw first, larger Y = closer = draw last)
+      treePositions.sort((a, b) => a.treeY - b.treeY)
+
+      // Draw trees on grass (sorted by depth)
+      for (const { tree, treeY } of treePositions) {
         drawTree(tree.x, treeY, tree.size, tree.type)
 
         // Move trees left to enhance motion effect
@@ -405,43 +447,81 @@ export function AnimatedBackground() {
 
     // Animation loop with optimized rendering
     let frameCount = 0
+    let firstFrameDrawn = false
     const animate = () => {
-      ctx.clearRect(0, 0, vw, vh)
+      try {
+        ctx.clearRect(0, 0, vw, vh)
 
-      // Draw the track
-      drawTrack()
+        // Draw the track
+        drawTrack()
 
-      // Draw the runner - scaled up for better visibility
-      ctx.drawImage(
-        runnerSprite,
-        currentFrame * runnerWidth,
-        0,
-        runnerWidth,
-        runnerHeight,
-        Math.floor(runnerX),
-        Math.floor(runnerY),
-        runnerWidth * 2,
-        runnerHeight * 2,
-      )
+        // Draw the runner - scaled up for better visibility
+        // Only draw if sprite context exists
+        if (spriteCtx) {
+          ctx.drawImage(
+            runnerSprite,
+            currentFrame * runnerWidth,
+            0,
+            runnerWidth,
+            runnerHeight,
+            Math.floor(runnerX),
+            Math.floor(runnerY),
+            runnerWidth * 2,
+            runnerHeight * 2,
+          )
+        }
 
-      // Update runner position
-      runnerX += 3
-      if (runnerX > vw) {
-        runnerX = -runnerWidth * 2
+        // Update runner position - 1.5x faster
+        runnerX += 3
+        if (runnerX > vw + runnerWidth * 2) {
+          runnerX = -runnerWidth * 2
+        }
+
+        // Update animation frame - adjust speed for smooth animation
+        if (frameCount % 6 === 0) {
+          currentFrame = (currentFrame + 1) % spriteFrames
+        }
+
+        frameCount++
+
+        // Hide loading after first frame is drawn
+        if (!firstFrameDrawn) {
+          firstFrameDrawn = true
+          // Wait for the frame to be painted, then hide loading
+          setTimeout(() => {
+            console.log("Hiding loading screen")
+            setIsLoading((prev) => {
+              console.log("Setting isLoading to false, previous value:", prev)
+              return false
+            })
+          }, 100)
+        }
+
+        requestAnimationFrame(animate)
+      } catch (error) {
+        console.error("Animation error:", error)
+        // If there's an error, still hide loading after a delay
+        setTimeout(() => {
+          setIsLoading(() => false)
+        }, 500)
       }
-
-      // Update animation frame - slower for better visibility
-      if (frameCount % 8 === 0) {
-        currentFrame = (currentFrame + 1) % spriteFrames
-      }
-
-      frameCount++
-      requestAnimationFrame(animate)
     }
 
+    // Start animation
+    console.log("Starting animation")
     animate()
 
+    // Fallback: hide loading after max 2 seconds even if animation fails
+    const fallbackTimeout = setTimeout(() => {
+      console.log("Fallback: hiding loading screen")
+      setIsLoading((prev) => {
+        console.log("Fallback: Setting isLoading to false, previous value:", prev)
+        return false
+      })
+    }, 2000)
+
     return () => {
+      clearTimeout(fallbackTimeout)
       window.removeEventListener("resize", onResize)
       window.removeEventListener("seasonChange", handleSeasonChange)
     }
@@ -449,13 +529,30 @@ export function AnimatedBackground() {
 
   // Update the canvas element to ensure pixel-perfect rendering
   return (
-    <canvas
-      ref={canvasRef}
-      aria-hidden
-      className="fixed inset-0 w-full h-full z-0 pointer-events-none"
-      style={{
-        imageRendering: "crisp-edges",
-      }}
-    />
+    <>
+      {isLoading && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900">
+          <div className="flex flex-col items-center gap-4">
+            <div className="relative w-16 h-16">
+              <div className="absolute inset-0 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin"></div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-8 h-8 bg-yellow-400 rounded-full animate-pulse"></div>
+              </div>
+            </div>
+            <p className="text-yellow-400 pixel-text text-sm">LOADING TRACK...</p>
+          </div>
+        </div>
+      )}
+      <canvas
+        ref={canvasRef}
+        aria-hidden
+        className="fixed inset-0 w-full h-full z-0 pointer-events-none"
+        style={{
+          imageRendering: "crisp-edges",
+          opacity: isLoading ? 0 : 1,
+          transition: "opacity 0.5s ease-in-out",
+        }}
+      />
+    </>
   )
 }

@@ -53,6 +53,9 @@
   * {
     @apply border-border;
   }
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground;
   }
@@ -128,6 +131,10 @@
 
 .hover-glow-purple:hover {
   box-shadow: 0 0 15px rgba(140, 122, 230, 0.6);
+}
+
+.hover-glow-orange:hover {
+  box-shadow: 0 0 15px rgba(255, 159, 64, 0.6);
 }
 
 /* Pixel animation effect */

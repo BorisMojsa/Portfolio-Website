@@ -1,7 +1,7 @@
 import type React from "react"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { AnimatedBackground } from "@/components/animated-background"
+import { ConditionalAnimatedBackground } from "@/components/conditional-animated-background"
 
 export const metadata = {
   title: "Boris Mojsa - Computer Science Student & Track Athlete",
@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
-          <AnimatedBackground />
+          <ConditionalAnimatedBackground />
           <div className="relative z-10">{children}</div>
         </ThemeProvider>
       </body>
