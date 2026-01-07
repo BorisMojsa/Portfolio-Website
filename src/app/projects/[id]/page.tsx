@@ -243,6 +243,16 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                 View Research Paper <ExternalLink className="ml-2 h-4 w-4" />
               </a>
             </Button>
+          ) : project.id === "smartpet" ? (
+            <Button
+              asChild
+              variant="outline"
+              className={cn("font-bold px-6 py-3 rounded-none border-b-4 hover:translate-y-1 transition-transform hover-scale", accent.button)}
+            >
+              <a href="/smartpet-plus" target="_blank" rel="noopener noreferrer">
+                Try SmartPet+ <ExternalLink className="ml-2 h-4 w-4" />
+              </a>
+            </Button>
           ) : (
             <div className="text-gray-400 italic">Project link coming soon.</div>
           )}
